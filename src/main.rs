@@ -36,6 +36,7 @@ use axum::{routing::get, Router};
 use clap::Parser;
 use serde::Deserialize;
 use tower_http::trace::TraceLayer;
+use tracing::{event, Level};
 
 // async fn query() -> Result<Body> {
 //     println!("Opening connection");
@@ -76,6 +77,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     tracing_subscriber::fmt::init();
 
     let args = Args::parse();
+    event!(Level::INFO, "Opening configuration file {}", args.config_file);
     let configuration: Configuration = serde_yaml::from_reader(
         fs::File::open(args.config_file)?)?;
     let app = Router::new()
@@ -83,7 +85,9 @@ async fn main() -> Result<(), Box<dyn Error>> {
         .layer(TraceLayer::new_for_http())
         ;
 
-    axum::Server::bind(&configuration.listen_address.parse().unwrap())
+    let address = configuration.listen_address.parse()?;
+    event!(Level::INFO, "Starting server on {}", &address);
+    axum::Server::bind(&address)
         .serve(app.into_make_service())
         .await?;
     Ok(())
