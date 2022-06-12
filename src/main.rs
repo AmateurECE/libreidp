@@ -31,20 +31,59 @@
 ////
 
 use std::error::Error;
+use std::fs;
 use axum::{routing::get, Router};
+use clap::Parser;
+use serde::Deserialize;
 use tower_http::trace::TraceLayer;
+
+// async fn query() -> Result<Body> {
+//     println!("Opening connection");
+//     let hostname = "ldap://edtwardy-webservices_openldap_1";
+//     let (conn, mut ldap) = LdapConnAsync::new(hostname).await?;
+//     ldap3::drive!(conn);
+//     let (rs, _res) = ldap.search(
+//         "ou=people,dc=edtwardy,dc=hopto,dc=org",
+//         Scope::Subtree,
+//         "(objectClass=*)",
+//         vec!["*"]
+//     ).await?.success()?;
+
+//     ldap.unbind().await?;
+//     Ok(Body::from(
+//         rs.into_iter()
+//             .map(|s| format!("{:?}\n", SearchEntry::construct(s)))
+//             .collect::<String>()))
+// }
+
+#[derive(Parser, Debug)]
+#[clap(author, version, about = None, long_about = None)]
+struct Args {
+    #[clap(short, long)]
+    config_file: String,
+}
+
+#[derive(Default, Deserialize)]
+struct Configuration {
+    listen_address: String,
+    ldap_uri: String,
+}
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
+    // Configure tower-http to trace requests/responses
     std::env::set_var("RUST_LOG", "tower_http=trace");
     tracing_subscriber::fmt::init();
 
+    let args = Args::parse();
+    let configuration: Configuration = serde_yaml::from_reader(
+        fs::File::open(args.config_file)?)?;
     let app = Router::new()
         .route("/", get(|| async { "Hello, World!" }))
         .layer(TraceLayer::new_for_http())
         ;
 
-    axum::Server::bind(&"0.0.0.0:3000".parse().unwrap())
+    axum::Server::bind(&configuration.listen_address.parse().unwrap())
         .serve(app.into_make_service())
         .await?;
     Ok(())
