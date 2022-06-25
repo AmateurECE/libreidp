@@ -7,7 +7,7 @@
 //
 // CREATED:         02/23/2022
 //
-// LAST EDITED:     06/12/2022
+// LAST EDITED:     06/25/2022
 //
 // Copyright 2022, Ethan D. Twardy
 //
@@ -32,31 +32,48 @@
 
 use std::error::Error;
 use std::fs;
-use axum::{routing::get, Router};
+
+use axum::{http::status::StatusCode, routing::get, Router};
 use clap::Parser;
+use ldap3::{Ldap, LdapConnAsync, Scope, SearchEntry};
 use serde::Deserialize;
+use tokio::sync::{mpsc, oneshot};
 use tower_http::trace::TraceLayer;
 use tracing::{event, Level};
 
-// async fn query() -> Result<Body> {
-//     println!("Opening connection");
-//     let hostname = "ldap://edtwardy-webservices_openldap_1";
-//     let (conn, mut ldap) = LdapConnAsync::new(hostname).await?;
-//     ldap3::drive!(conn);
-//     let (rs, _res) = ldap.search(
-//         "ou=people,dc=edtwardy,dc=hopto,dc=org",
-//         Scope::Subtree,
-//         "(objectClass=*)",
-//         vec!["*"]
-//     ).await?.success()?;
+struct IdentityProxy {
+    base: String,
+    ldap: Ldap,
+}
 
-//     ldap.unbind().await?;
-//     Ok(Body::from(
-//         rs.into_iter()
-//             .map(|s| format!("{:?}\n", SearchEntry::construct(s)))
-//             .collect::<String>()))
-// }
+impl IdentityProxy {
+    pub async fn new(hostname: &str, base: String) ->
+        ldap3::result::Result<Self>
+    {
+        let (conn, ldap) = LdapConnAsync::new(hostname).await?;
+        ldap3::drive!(conn);
+        Ok(Self {
+            base,
+            ldap
+        })
+    }
 
+    pub async fn query(&mut self) -> ldap3::result::Result<String> {
+        let (rs, _res) = self.ldap.search(
+            &self.base,
+            Scope::Subtree,
+            "(objectClass=*)",
+            vec!["*"]
+        ).await?.success()?;
+
+        self.ldap.unbind().await?;
+        Ok(rs.into_iter()
+           .map(|s| format!("{:?}\n", SearchEntry::construct(s)))
+           .collect::<String>())
+    }
+}
+
+// Command line arguments
 #[derive(Parser, Debug)]
 #[clap(author, version, about = None, long_about = None)]
 struct Args {
@@ -64,28 +81,64 @@ struct Args {
     config_file: String,
 }
 
+// Configuration for the LDAP-side
+#[derive(Default, Deserialize)]
+struct LdapConfiguration {
+    uri: String,
+    base: String,
+}
+
+// Configuration for the HTTP-side
+#[derive(Default, Deserialize)]
+struct HttpConfiguration {
+    address: String,
+}
+
+// Serializable configuration object
 #[derive(Default, Deserialize)]
 struct Configuration {
-    listen_address: String,
-    ldap_uri: String,
+    ldap: LdapConfiguration,
+    http: HttpConfiguration,
 }
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
     // Configure tower-http to trace requests/responses
-    std::env::set_var("RUST_LOG", "tower_http=trace");
-    tracing_subscriber::fmt::init();
+    tracing_subscriber::fmt()
+        .with_env_filter("tower_http=debug,libreidp=debug")
+        .init();
 
     let args = Args::parse();
     event!(Level::INFO, "Opening configuration file {}", args.config_file);
     let configuration: Configuration = serde_yaml::from_reader(
         fs::File::open(args.config_file)?)?;
+
+    let mut proxy = IdentityProxy::new(
+        &configuration.ldap.uri, configuration.ldap.base).await?;
+    let (sender, mut receiver) = mpsc::channel::<oneshot::Sender<
+            ldap3::result::Result<String>>>(64);
+    tokio::spawn(async move {
+        while let Some(responder) = receiver.recv().await {
+            responder.send(proxy.query().await).unwrap();
+        }
+    });
+
     let app = Router::new()
-        .route("/", get(|| async { "Hello, World!" }))
+        .route("/", get({
+            let sender = sender.clone();
+            || async move {
+                let (responder, retriever) = oneshot::channel();
+                sender.send(responder).await.unwrap();
+                retriever.await.unwrap().map_err(|e| {
+                    event!(Level::ERROR, "{:?}", e);
+                    StatusCode::INTERNAL_SERVER_ERROR
+                })
+            }
+        }))
         .layer(TraceLayer::new_for_http())
         ;
 
-    let address = configuration.listen_address.parse()?;
+    let address = configuration.http.address.parse()?;
     event!(Level::INFO, "Starting server on {}", &address);
     axum::Server::bind(&address)
         .serve(app.into_make_service())
