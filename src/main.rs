@@ -7,7 +7,7 @@
 //
 // CREATED:         02/23/2022
 //
-// LAST EDITED:     06/25/2022
+// LAST EDITED:     06/26/2022
 //
 // Copyright 2022, Ethan D. Twardy
 //
@@ -36,10 +36,14 @@ use std::fs;
 use axum::{http::status::StatusCode, routing::get, Router};
 use clap::Parser;
 use ldap3::{Ldap, LdapConnAsync, Scope, SearchEntry};
-use serde::Deserialize;
 use tokio::sync::{mpsc, oneshot};
 use tower_http::trace::TraceLayer;
 use tracing::{event, Level};
+
+mod cache;
+mod configuration;
+
+use configuration::IdPConfiguration;
 
 struct IdentityProxy {
     base: String,
@@ -81,26 +85,6 @@ struct Args {
     config_file: String,
 }
 
-// Configuration for the LDAP-side
-#[derive(Default, Deserialize)]
-struct LdapConfiguration {
-    uri: String,
-    base: String,
-}
-
-// Configuration for the HTTP-side
-#[derive(Default, Deserialize)]
-struct HttpConfiguration {
-    address: String,
-}
-
-// Serializable configuration object
-#[derive(Default, Deserialize)]
-struct Configuration {
-    ldap: LdapConfiguration,
-    http: HttpConfiguration,
-}
-
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
     // Configure tower-http to trace requests/responses
@@ -110,7 +94,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
     let args = Args::parse();
     event!(Level::INFO, "Opening configuration file {}", args.config_file);
-    let configuration: Configuration = serde_yaml::from_reader(
+    let configuration: IdPConfiguration = serde_yaml::from_reader(
         fs::File::open(args.config_file)?)?;
 
     let mut proxy = IdentityProxy::new(
