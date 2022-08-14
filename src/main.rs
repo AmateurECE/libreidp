@@ -7,7 +7,7 @@
 //
 // CREATED:         02/23/2022
 //
-// LAST EDITED:     06/26/2022
+// LAST EDITED:     06/27/2022
 //
 // Copyright 2022, Ethan D. Twardy
 //
@@ -42,6 +42,7 @@ use tracing::{event, Level};
 
 mod cache;
 mod configuration;
+mod frontend;
 
 use configuration::IdPConfiguration;
 
@@ -89,13 +90,12 @@ struct Args {
 async fn main() -> Result<(), Box<dyn Error>> {
     // Configure tower-http to trace requests/responses
     tracing_subscriber::fmt()
-        .with_env_filter("tower_http=debug,libreidp=debug")
+        .with_env_filter("tower_http=debug,libreidp=trace")
         .init();
 
     let args = Args::parse();
     event!(Level::INFO, "Opening configuration file {}", args.config_file);
-    let configuration: IdPConfiguration = serde_yaml::from_reader(
-        fs::File::open(args.config_file)?)?;
+    let configuration = read_configuration(&args.config_file)?;
 
     let mut proxy = IdentityProxy::new(
         &configuration.ldap.uri, configuration.ldap.base).await?;

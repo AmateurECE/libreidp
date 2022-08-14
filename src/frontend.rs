@@ -1,9 +1,9 @@
 ///////////////////////////////////////////////////////////////////////////////
-// NAME:            configuration.rs
+// NAME:            frontend.rs
 //
 // AUTHOR:          Ethan D. Twardy <ethan.twardy@gmail.com>
 //
-// DESCRIPTION:     Logic and structures for handling configuration.
+// DESCRIPTION:     Abstractions for the frontend of the LibreIdP application
 //
 // CREATED:         06/26/2022
 //
@@ -31,27 +31,26 @@
 ////
 
 use serde::Deserialize;
-use crate::cache::CacheConfiguration;
-use crate::frontend::FrontendConfiguration;
 
-// Configuration for the LDAP-side
-#[derive(Default, Deserialize)]
-pub struct LdapConfiguration {
-    pub uri: String,
-    pub base: String,
+pub mod http;
+
+use http::HttpConfiguration;
+
+#[derive(Deserialize)]
+pub enum FrontendConfiguration {
+    Http(HttpConfiguration),
 }
 
-// Serializable configuration object
-#[derive(Default, Deserialize)]
-pub struct IdPConfiguration {
-    pub ldap: LdapConfiguration,
-    pub frontend: FrontendConfiguration,
-    pub cache: CacheConfiguration,
+impl Default for FrontendConfiguration {
+    fn default() -> Self {
+        Self::Http(HttpConfiguration::default())
+    }
 }
 
-pub fn read_configuration(path: &str) -> Result<IdpConfiguration, String> {
-    let file = fs::File::open(path)?;
-    todo!()
+pub trait FrontendInterface: Sized {
+    fn serve(&mut self) ->
 }
+
+pub fn initialize(self) -> Box<dyn >
 
 ///////////////////////////////////////////////////////////////////////////////

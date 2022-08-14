@@ -1,13 +1,13 @@
 ///////////////////////////////////////////////////////////////////////////////
-// NAME:            configuration.rs
+// NAME:            http.rs
 //
 // AUTHOR:          Ethan D. Twardy <ethan.twardy@gmail.com>
 //
-// DESCRIPTION:     Logic and structures for handling configuration.
+// DESCRIPTION:     Implementation of frontend abstractions for Http.
 //
 // CREATED:         06/26/2022
 //
-// LAST EDITED:     06/27/2022
+// LAST EDITED:     06/26/2022
 //
 // Copyright 2022, Ethan D. Twardy
 //
@@ -31,27 +31,13 @@
 ////
 
 use serde::Deserialize;
-use crate::cache::CacheConfiguration;
-use crate::frontend::FrontendConfiguration;
 
-// Configuration for the LDAP-side
 #[derive(Default, Deserialize)]
-pub struct LdapConfiguration {
-    pub uri: String,
-    pub base: String,
+pub struct HttpConfiguration {
+    pub address: String,
 }
 
-// Serializable configuration object
-#[derive(Default, Deserialize)]
-pub struct IdPConfiguration {
-    pub ldap: LdapConfiguration,
-    pub frontend: FrontendConfiguration,
-    pub cache: CacheConfiguration,
-}
-
-pub fn read_configuration(path: &str) -> Result<IdpConfiguration, String> {
-    let file = fs::File::open(path)?;
-    todo!()
+pub struct HttpFrontend {
 }
 
 ///////////////////////////////////////////////////////////////////////////////
