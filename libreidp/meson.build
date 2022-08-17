@@ -30,6 +30,9 @@
 # IN THE SOFTWARE.
 ###
 
+compiler = meson.get_compiler('c')
+compiler.has_function('strdup', prefix: '''#include <string.h>''')
+
 executable(
   'libreidp',
   sources: [

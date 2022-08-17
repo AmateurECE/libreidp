@@ -39,6 +39,7 @@ project('libreidp', 'c', version: '0.1.0',
         ])
 
 add_global_arguments('--std=c17', language: 'c')
+add_global_arguments('-D_POSIX_C_SOURCE=200809L', language: 'c')
 
 subdir('libreidp')
 subdir('libreidp-runtime')

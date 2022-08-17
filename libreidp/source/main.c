@@ -31,6 +31,8 @@
 ////
 
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include "idp-config.h"
 #include "plugin-resolver.h"
@@ -53,7 +55,26 @@ int main(int argc, char** argv) {
         .plugin_load_directories = plugin_load_directories,
     };
 
-    printf("Hello, world!\n");
+    IdpPluginResolver* resolver = idp_plugin_resolver_new();
+    for (size_t i = 0; NULL != config.plugin_load_directories[i]; ++i) {
+        printf("Plugin directory: %s\n", config.plugin_load_directories[i]);
+        idp_plugin_resolver_add_directory(resolver,
+            strdup(config.plugin_load_directories[i]));
+    }
+
+    for (size_t i = 0; NULL != config.plugins[i]; ++i) {
+        char* plugin_path = idp_plugin_resolver_get_plugin_path(resolver,
+            config.plugins[i]);
+        if (NULL == plugin_path) {
+            fprintf(stderr, "Unable to locate plugin \"%s\"\n",
+                config.plugins[i]);
+        } else {
+            printf("Discovered plugin %s\n", plugin_path);
+        }
+        free(plugin_path);
+    }
+
+    idp_plugin_resolver_free(resolver);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
