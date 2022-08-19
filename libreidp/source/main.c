@@ -7,7 +7,7 @@
 //
 // CREATED:         08/16/2022
 //
-// LAST EDITED:     08/17/2022
+// LAST EDITED:     08/18/2022
 //
 // Copyright 2022, Ethan D. Twardy
 //
@@ -37,7 +37,7 @@
 #include "idp-config.h"
 #include "plugin-resolver.h"
 
-int main(int argc, char** argv) {
+int main() {
     char* plugins[] = {
         "dummy",
         NULL,

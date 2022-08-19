@@ -7,7 +7,7 @@
 #
 # CREATED:          08/17/2022
 #
-# LAST EDITED:      08/17/2022
+# LAST EDITED:      08/18/2022
 #
 # Copyright 2022, Ethan D. Twardy
 #
@@ -29,11 +29,5 @@
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 # IN THE SOFTWARE.
 ###
-
-libreidp_runtime = shared_library(
-  'reidp-runtime',
-  'source/runtime.c',
-  soversion: meson.project_version(),
-)
 
 ###############################################################################
