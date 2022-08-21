@@ -7,7 +7,7 @@
 #
 # CREATED:          08/16/2022
 #
-# LAST EDITED:      08/17/2022
+# LAST EDITED:      08/20/2022
 #
 # Copyright 2022, Ethan D. Twardy
 #
@@ -31,15 +31,21 @@
 ###
 
 compiler = meson.get_compiler('c')
-compiler.has_function('strdup', prefix: '''#include <string.h>''')
+if not compiler.has_function('strdup', prefix: '''#include <string.h>''')
+  error('Compiler does not provide strdup(3)')
+endif
+
+dl = dependency('dl')
 
 executable(
   'libreidp',
   sources: [
     'source/main.c',
     'source/plugin-resolver.c',
+    'source/plugin-loader.c',
   ],
-  include_directories: ['include'],
+  include_directories: ['include', '../libreidp-runtime/include'],
+  dependencies: [dl],
 )
 
 ###############################################################################

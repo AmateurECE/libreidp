@@ -1,12 +1,11 @@
 ///////////////////////////////////////////////////////////////////////////////
-// NAME:            dummy.c
+// NAME:            http-handler.h
 //
 // AUTHOR:          Ethan D. Twardy <ethan.twardy@gmail.com>
 //
-// DESCRIPTION:     A simple dummy plugin for "engineering confidence" of the
-//                  plugin loading system.
+// DESCRIPTION:     An interface for a plugin that responds to HTTP requests.
 //
-// CREATED:         08/17/2022
+// CREATED:         08/19/2022
 //
 // LAST EDITED:     08/20/2022
 //
@@ -31,12 +30,13 @@
 // IN THE SOFTWARE.
 ////
 
-#include <stdlib.h>
-#include <libreidp/libreidp.h>
+#ifndef IDP_HTTP_HANDLER_H
+#define IDP_HTTP_HANDLER_H
 
-IdpPluginDefinition idp_plugin_definition = {
-    .interface = IDP_PLUGIN_HTTP_HANDLER,
-    .plugin = NULL,
-};
+typedef enum IdpHttpHandlerVersion {
+    IDP_HTTP_HANDLER_VERSION_UNSTABLE,
+} IdpHttpHandlerVersion;
+
+#endif // IDP_HTTP_HANDLER_H
 
 ///////////////////////////////////////////////////////////////////////////////

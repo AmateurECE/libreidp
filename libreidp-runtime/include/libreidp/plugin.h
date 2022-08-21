@@ -1,12 +1,11 @@
 ///////////////////////////////////////////////////////////////////////////////
-// NAME:            dummy.c
+// NAME:            plugin.h
 //
 // AUTHOR:          Ethan D. Twardy <ethan.twardy@gmail.com>
 //
-// DESCRIPTION:     A simple dummy plugin for "engineering confidence" of the
-//                  plugin loading system.
+// DESCRIPTION:     Definitions that support plugin compilation.
 //
-// CREATED:         08/17/2022
+// CREATED:         08/20/2022
 //
 // LAST EDITED:     08/20/2022
 //
@@ -31,12 +30,16 @@
 // IN THE SOFTWARE.
 ////
 
-#include <stdlib.h>
-#include <libreidp/libreidp.h>
+#ifndef IDP_PLUGIN_H
+#define IDP_PLUGIN_H
 
-IdpPluginDefinition idp_plugin_definition = {
-    .interface = IDP_PLUGIN_HTTP_HANDLER,
-    .plugin = NULL,
-};
+#include <libreidp/interfaces.h>
+
+typedef struct IdpPluginDefinition {
+    IdpPluginInterface interface;
+    void* plugin;
+} IdpPluginDefinition;
+
+#endif // IDP_PLUGIN_H
 
 ///////////////////////////////////////////////////////////////////////////////

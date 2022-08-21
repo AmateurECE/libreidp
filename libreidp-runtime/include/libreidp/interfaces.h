@@ -1,12 +1,11 @@
 ///////////////////////////////////////////////////////////////////////////////
-// NAME:            dummy.c
+// NAME:            interfaces.h
 //
 // AUTHOR:          Ethan D. Twardy <ethan.twardy@gmail.com>
 //
-// DESCRIPTION:     A simple dummy plugin for "engineering confidence" of the
-//                  plugin loading system.
+// DESCRIPTION:     Plugin interfaces supported by LibreIdP
 //
-// CREATED:         08/17/2022
+// CREATED:         08/19/2022
 //
 // LAST EDITED:     08/20/2022
 //
@@ -31,12 +30,14 @@
 // IN THE SOFTWARE.
 ////
 
-#include <stdlib.h>
-#include <libreidp/libreidp.h>
+#ifndef IDP_INTERFACES_H
+#define IDP_INTERFACES_H
 
-IdpPluginDefinition idp_plugin_definition = {
-    .interface = IDP_PLUGIN_HTTP_HANDLER,
-    .plugin = NULL,
-};
+typedef enum IdpPluginInterface {
+    IDP_PLUGIN_NONE,
+    IDP_PLUGIN_HTTP_HANDLER,
+} IdpPluginInterface;
+
+#endif // IDP_INTERFACES_H
 
 ///////////////////////////////////////////////////////////////////////////////
