@@ -7,7 +7,7 @@
 #
 # CREATED:          08/16/2022
 #
-# LAST EDITED:      08/20/2022
+# LAST EDITED:      08/22/2022
 #
 # Copyright 2022, Ethan D. Twardy
 #
@@ -43,6 +43,7 @@ executable(
     'source/main.c',
     'source/plugin-resolver.c',
     'source/plugin-loader.c',
+    'source/core-impl/http.c',
   ],
   include_directories: ['include', '../libreidp-runtime/include'],
   dependencies: [dl],
