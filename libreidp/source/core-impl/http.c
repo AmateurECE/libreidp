@@ -7,7 +7,7 @@
 //
 // CREATED:         08/22/2022
 //
-// LAST EDITED:     08/22/2022
+// LAST EDITED:     08/23/2022
 //
 // Copyright 2022, Ethan D. Twardy
 //
@@ -30,14 +30,28 @@
 // IN THE SOFTWARE.
 ////
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <libreidp/priv/core/http.h>
 
 ///////////////////////////////////////////////////////////////////////////////
 // Public API
 ////
 
-IdpHttpCore* idp_http_core_new() {}
+IdpHttpCore* idp_http_core_new() {
+    IdpHttpCore* core = malloc(sizeof(IdpHttpCore));
+    if (NULL == core) {
+        perror("couldn't allocate memory for HTTP core");
+        exit(1);
+    }
 
-void idp_http_core_shutdown(IdpHttpCore* core) {}
+    memset(core, 0, sizeof(IdpHttpCore));
+    return core;
+}
+
+void idp_http_core_shutdown(IdpHttpCore* core) {
+    free(core);
+}
 
 ///////////////////////////////////////////////////////////////////////////////
