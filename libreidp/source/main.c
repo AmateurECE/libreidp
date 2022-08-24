@@ -52,8 +52,9 @@ static IdpPlugin** idp_load_plugins(const IdpConfig* config) {
     }
 
     // Prepare a list for the loaded plugins
-    size_t number_plugins = 1;
+    size_t number_plugins = 0;
     for (; NULL != config->plugins[number_plugins]; ++number_plugins);
+    number_plugins += 1; // for NULL sentinel
 
     IdpPlugin** loaded_plugins = malloc(number_plugins * sizeof(IdpPlugin*));
     if (NULL == loaded_plugins) {
