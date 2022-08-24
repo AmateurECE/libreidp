@@ -30,9 +30,12 @@
 // IN THE SOFTWARE.
 ////
 
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include <libreidp/priv/core/http.h>
 
 #include "idp-config.h"
 #include "plugin-loader.h"
@@ -98,21 +101,37 @@ static void idp_remove_plugins(IdpPlugin** loaded_plugins) {
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+// Core Configuration
+////
+
+typedef struct IdpCoresEnabled {
+    struct { bool enabled; IdpHttpCore* core; } http;
+} IdpCoresEnabled;
+
+static IdpCoresEnabled idp_get_requested_cores(IdpPlugin** plugins) {
+    IdpCoresEnabled cores_enabled = {0};
+
+    for (size_t i = 0; NULL != plugins[i]; ++i) {
+        switch(idp_plugin_get_interface(plugins[i])) {
+        case IDP_PLUGIN_HTTP_HANDLER:
+            printf("Enabling HTTP core\n");
+            cores_enabled.http.enabled = true;
+            break;
+        default: break;
+        }
+    }
+
+    return cores_enabled;
+}
+
+///////////////////////////////////////////////////////////////////////////////
 // Main
 ////
 
 int main() {
     // Static configuration (for now).
-    char* plugins[] = {
-        "dummy",
-        NULL,
-    };
-
-    char* plugin_load_directories[] = {
-        "plugins/dummy",
-        NULL,
-    };
-
+    char* plugins[] = { "dummy", NULL, };
+    char* plugin_load_directories[] = { "plugins/dummy", NULL, };
     const IdpConfig config = {
         .auth_form_path = "/auth",
         .auth_form_uri = "", // Authentication form resides on our server
@@ -124,6 +143,17 @@ int main() {
     };
 
     IdpPlugin** loaded_plugins = idp_load_plugins(&config);
+
+    IdpCoresEnabled cores_enabled = idp_get_requested_cores(loaded_plugins);
+    if (cores_enabled.http.enabled) {
+        cores_enabled.http.core = idp_http_core_new();
+        idp_http_core_add_port(cores_enabled.http.core,
+            config.http.default_port);
+    }
+
+    if (cores_enabled.http.enabled) {
+        idp_http_core_shutdown(cores_enabled.http.core);
+    }
     idp_remove_plugins(loaded_plugins);
 }
 

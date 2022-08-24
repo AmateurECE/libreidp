@@ -50,6 +50,8 @@ IdpHttpCore* idp_http_core_new() {
     return core;
 }
 
+void idp_http_core_add_port(IdpHttpCore* core, int port) {}
+
 void idp_http_core_shutdown(IdpHttpCore* core) {
     free(core);
 }

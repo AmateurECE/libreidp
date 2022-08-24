@@ -43,12 +43,17 @@ typedef struct IdpHttpCore {
 // Initialize an HTTP core
 IdpHttpCore* idp_http_core_new();
 
+// Configure the core to begin listening on `port'.
+void idp_http_core_add_port(IdpHttpCore* core, int port);
+
 // Shutdown an HTTP core
 void idp_http_core_shutdown(IdpHttpCore* core);
 
 // Register all watchers with an event loop. Since handles can later be closed
 // without a reference to the run loop, this is the only additional method
 // necessary to integrate with the rest of the libuv plumbing.
+//
+// NOTE: This must be the last function that's called while setting up!
 void idp_http_core_register(IdpHttpCore* core, uv_loop_t* loop);
 
 #endif // IDP_CORE_IMPL_HTTP_H
