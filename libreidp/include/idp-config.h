@@ -7,7 +7,7 @@
 //
 // CREATED:         08/17/2022
 //
-// LAST EDITED:     08/17/2022
+// LAST EDITED:     08/24/2022
 //
 // Copyright 2022, Ethan D. Twardy
 //
@@ -33,7 +33,11 @@
 #ifndef IDP_CONFIG_H
 #define IDP_CONFIG_H
 
+#include <libreidp/core/http.h>
+
 typedef struct IdpConfig {
+    IdpHttpCoreConfig http;
+
     // The URI of the authentication form is formed by:
     // {auth_form_uri}{auth_form_path}
     char* auth_form_path;

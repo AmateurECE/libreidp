@@ -118,6 +118,9 @@ int main() {
         .auth_form_uri = "", // Authentication form resides on our server
         .plugins = plugins,
         .plugin_load_directories = plugin_load_directories,
+        .http = {
+            .default_port = 3000,
+        },
     };
 
     IdpPlugin** loaded_plugins = idp_load_plugins(&config);

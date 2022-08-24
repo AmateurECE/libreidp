@@ -8,7 +8,7 @@
 //
 // CREATED:         08/22/2022
 //
-// LAST EDITED:     08/23/2022
+// LAST EDITED:     08/24/2022
 //
 // Copyright 2022, Ethan D. Twardy
 //
@@ -35,6 +35,15 @@
 #define IDP_HTTP_H
 
 #include <stddef.h>
+
+///////////////////////////////////////////////////////////////////////////////
+// Configuration
+////
+
+// Configuration for the HTTP core
+typedef struct IdpHttpCoreConfig {
+    int default_port;
+} IdpHttpCoreConfig;
 
 ///////////////////////////////////////////////////////////////////////////////
 // Context
