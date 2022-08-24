@@ -35,13 +35,21 @@ if not compiler.has_header('uv.h')
   error('libuv is not installed')
 endif
 
-libreidp_runtime = shared_library(
+libreidp_runtime_include_directories = include_directories('include')
+
+libreidp_runtime_library = shared_library(
   'reidp-runtime',
   sources: [
     'source/core/http.c',
+    'source/interfaces.c',
   ],
   soversion: meson.project_version(),
   include_directories: ['include'],
+)
+
+libreidp_runtime = declare_dependency(
+  link_with: libreidp_runtime_library,
+  include_directories: libreidp_runtime_include_directories
 )
 
 ###############################################################################

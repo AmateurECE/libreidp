@@ -7,7 +7,7 @@
 //
 // CREATED:         08/19/2022
 //
-// LAST EDITED:     08/20/2022
+// LAST EDITED:     08/24/2022
 //
 // Copyright 2022, Ethan D. Twardy
 //
@@ -37,6 +37,8 @@ typedef enum IdpPluginInterface {
     IDP_PLUGIN_NONE,
     IDP_PLUGIN_HTTP_HANDLER,
 } IdpPluginInterface;
+
+const char* idp_plugin_interface_to_str(IdpPluginInterface interface);
 
 #endif // IDP_INTERFACES_H
 

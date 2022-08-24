@@ -7,7 +7,7 @@
 #
 # CREATED:          08/16/2022
 #
-# LAST EDITED:      08/22/2022
+# LAST EDITED:      08/24/2022
 #
 # Copyright 2022, Ethan D. Twardy
 #
@@ -46,7 +46,7 @@ executable(
     'source/core-impl/http.c',
   ],
   include_directories: ['include', '../libreidp-runtime/include'],
-  dependencies: [dl],
+  dependencies: [dl, libreidp_runtime],
 )
 
 ###############################################################################

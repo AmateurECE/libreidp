@@ -1,11 +1,11 @@
 ///////////////////////////////////////////////////////////////////////////////
-// NAME:            plugin-loader.h
+// NAME:            interfaces.c
 //
 // AUTHOR:          Ethan D. Twardy <ethan.twardy@gmail.com>
 //
-// DESCRIPTION:     Load a plugin given a path to its file.
+// DESCRIPTION:     Logic around LibreIdP plugin interfaces.
 //
-// CREATED:         08/19/2022
+// CREATED:         08/24/2022
 //
 // LAST EDITED:     08/24/2022
 //
@@ -30,18 +30,18 @@
 // IN THE SOFTWARE.
 ////
 
-#ifndef PLUGIN_LOADER_H
-#define PLUGIN_LOADER_H
-
 #include <libreidp/interfaces.h>
 
-typedef struct IdpPlugin IdpPlugin;
+///////////////////////////////////////////////////////////////////////////////
+// Public API
+////
 
-IdpPlugin* idp_plugin_load(char* filename);
-void idp_plugin_remove(IdpPlugin* plugin);
-
-IdpPluginInterface idp_plugin_get_interface(const IdpPlugin* plugin);
-
-#endif // PLUGIN_LOADER_H
+const char* idp_plugin_interface_to_str(IdpPluginInterface interface) {
+    switch (interface) {
+    case IDP_PLUGIN_NONE: return "none";
+    case IDP_PLUGIN_HTTP_HANDLER: return "http";
+    default: return "unknown";
+    }
+}
 
 ///////////////////////////////////////////////////////////////////////////////

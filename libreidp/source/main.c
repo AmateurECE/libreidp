@@ -77,13 +77,10 @@ static IdpPlugin** idp_load_plugins(const IdpConfig* config) {
             if (NULL == loaded_plugin) {
                 printf("failed to load\n");
             } else {
-                printf("interface: ");
+                printf("interface: %s\n", idp_plugin_interface_to_str(
+                        idp_plugin_get_interface(loaded_plugin)));
             }
 
-            switch (idp_plugin_get_interface(loaded_plugin)) {
-            case IDP_PLUGIN_HTTP_HANDLER: printf("HTTP\n"); break;
-            default: printf("Unknown!\n"); break;
-            }
             loaded_plugins[number_loaded_plugins++] = loaded_plugin;
         }
     }
