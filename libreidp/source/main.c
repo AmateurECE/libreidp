@@ -7,7 +7,7 @@
 //
 // CREATED:         08/16/2022
 //
-// LAST EDITED:     08/20/2022
+// LAST EDITED:     08/24/2022
 //
 // Copyright 2022, Ethan D. Twardy
 //
@@ -38,6 +38,63 @@
 #include "plugin-loader.h"
 #include "plugin-resolver.h"
 
+///////////////////////////////////////////////////////////////////////////////
+// Supporting Logic
+////
+
+static IdpPlugin** idp_load_plugins(const IdpConfig* config) {
+    // Initialize the resolver
+    IdpPluginResolver* resolver = idp_plugin_resolver_new();
+    for (size_t i = 0; NULL != config->plugin_load_directories[i]; ++i) {
+        printf("Plugin directory: %s\n", config->plugin_load_directories[i]);
+        idp_plugin_resolver_add_directory(resolver,
+            strdup(config->plugin_load_directories[i]));
+    }
+
+    // Prepare a list for the loaded plugins
+    size_t number_plugins = 1;
+    for (; NULL != config->plugins[number_plugins]; ++number_plugins);
+
+    IdpPlugin** loaded_plugins = malloc(number_plugins * sizeof(IdpPlugin*));
+    if (NULL == loaded_plugins) {
+        perror("couldn't allocate memory for plugin registry");
+        exit(1);
+    }
+    memset(loaded_plugins, 0, number_plugins * sizeof(IdpPlugin*));
+    size_t number_loaded_plugins = 0;
+
+    // Resolve any requested plugins to a filesystem path
+    for (size_t i = 0; NULL != config->plugins[i]; ++i) {
+        char* plugin_path = idp_plugin_resolver_get_plugin_path(resolver,
+            config->plugins[i]);
+        if (NULL == plugin_path) {
+            fprintf(stderr, "Unable to locate plugin \"%s\"\n",
+                config->plugins[i]);
+        } else {
+            printf("Discovered plugin %s...", plugin_path);
+            IdpPlugin* loaded_plugin = idp_plugin_load(plugin_path);
+            if (NULL == loaded_plugin) {
+                printf("failed to load\n");
+            } else {
+                printf("interface: ");
+            }
+
+            switch (idp_plugin_get_interface(loaded_plugin)) {
+            case IDP_PLUGIN_HTTP_HANDLER: printf("HTTP\n"); break;
+            default: printf("Unknown!\n"); break;
+            }
+            loaded_plugins[number_loaded_plugins++] = loaded_plugin;
+        }
+    }
+
+    idp_plugin_resolver_free(resolver);
+    return loaded_plugins;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// Main
+////
+
 int main() {
     // Static configuration (for now).
     char* plugins[] = {
@@ -57,49 +114,14 @@ int main() {
         .plugin_load_directories = plugin_load_directories,
     };
 
-    // Initialize the resolver
-    IdpPluginResolver* resolver = idp_plugin_resolver_new();
-    for (size_t i = 0; NULL != config.plugin_load_directories[i]; ++i) {
-        printf("Plugin directory: %s\n", config.plugin_load_directories[i]);
-        idp_plugin_resolver_add_directory(resolver,
-            strdup(config.plugin_load_directories[i]));
+    IdpPlugin** loaded_plugins = idp_load_plugins(&config);
+
+    // Free the loaded plugins
+    for (size_t i = 0; NULL != loaded_plugins[i]; ++i) {
+        idp_plugin_remove(loaded_plugins[i]);
     }
 
-    // Prepare a list for the loaded plugins
-    size_t number_plugins = 0;
-    for (; NULL != config.plugins[number_plugins]; ++number_plugins);
-
-    IdpPlugin** loaded_plugins = malloc(number_plugins * sizeof(IdpPlugin*));
-    if (NULL == loaded_plugins) {
-        perror("couldn't allocate memory for plugin registry");
-        exit(1);
-    }
-    memset(loaded_plugins, 0, number_plugins * sizeof(IdpPlugin*));
-    size_t number_loaded_plugins = 0;
-
-    // Resolve any requested plugins to a filesystem path
-    for (size_t i = 0; NULL != config.plugins[i]; ++i) {
-        char* plugin_path = idp_plugin_resolver_get_plugin_path(resolver,
-            config.plugins[i]);
-        if (NULL == plugin_path) {
-            fprintf(stderr, "Unable to locate plugin \"%s\"\n",
-                config.plugins[i]);
-        } else {
-            printf("Discovered plugin %s...", plugin_path);
-            IdpPlugin* loaded_plugin = idp_plugin_load(plugin_path);
-            if (NULL == loaded_plugin) {
-                printf("failed to load\n");
-            }
-
-            switch (idp_plugin_get_interface(loaded_plugin)) {
-            case IDP_PLUGIN_HTTP_HANDLER: printf("HTTP\n"); break;
-            default: printf("Unknown!\n"); break;
-            }
-            loaded_plugins[number_loaded_plugins++] = loaded_plugin;
-        }
-    }
-
-    idp_plugin_resolver_free(resolver);
+    free(loaded_plugins);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
