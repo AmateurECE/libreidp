@@ -7,7 +7,7 @@
 //
 // CREATED:         08/22/2022
 //
-// LAST EDITED:     08/23/2022
+// LAST EDITED:     08/24/2022
 //
 // Copyright 2022, Ethan D. Twardy
 //
@@ -53,5 +53,7 @@ IdpHttpCore* idp_http_core_new() {
 void idp_http_core_shutdown(IdpHttpCore* core) {
     free(core);
 }
+
+void idp_http_core_register(IdpHttpCore* core, uv_loop_t* loop) {}
 
 ///////////////////////////////////////////////////////////////////////////////

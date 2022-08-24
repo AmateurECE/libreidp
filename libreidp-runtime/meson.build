@@ -7,7 +7,7 @@
 #
 # CREATED:          08/17/2022
 #
-# LAST EDITED:      08/22/2022
+# LAST EDITED:      08/24/2022
 #
 # Copyright 2022, Ethan D. Twardy
 #
@@ -29,6 +29,11 @@
 # FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 # IN THE SOFTWARE.
 ###
+
+compiler = meson.get_compiler('c')
+if not compiler.has_header('uv.h')
+  error('libuv is not installed')
+endif
 
 libreidp_runtime = shared_library(
   'reidp-runtime',

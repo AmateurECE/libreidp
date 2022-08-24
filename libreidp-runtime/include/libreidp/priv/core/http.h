@@ -7,7 +7,7 @@
 //
 // CREATED:         08/22/2022
 //
-// LAST EDITED:     08/22/2022
+// LAST EDITED:     08/24/2022
 //
 // Copyright 2022, Ethan D. Twardy
 //
@@ -33,14 +33,23 @@
 #ifndef IDP_CORE_IMPL_HTTP_H
 #define IDP_CORE_IMPL_HTTP_H
 
+#include <uv.h>
 #include <libreidp/core/http.h>
 
 typedef struct IdpHttpCore {
     int accept_fd;
 } IdpHttpCore;
 
+// Initialize an HTTP core
 IdpHttpCore* idp_http_core_new();
+
+// Shutdown an HTTP core
 void idp_http_core_shutdown(IdpHttpCore* core);
+
+// Register all watchers with an event loop. Since handles can later be closed
+// without a reference to the run loop, this is the only additional method
+// necessary to integrate with the rest of the libuv plumbing.
+void idp_http_core_register(IdpHttpCore* core, uv_loop_t* loop);
 
 #endif // IDP_CORE_IMPL_HTTP_H
 
