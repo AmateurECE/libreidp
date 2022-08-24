@@ -39,7 +39,7 @@
 #include "plugin-resolver.h"
 
 ///////////////////////////////////////////////////////////////////////////////
-// Supporting Logic
+// Plugin Loading
 ////
 
 static IdpPlugin** idp_load_plugins(const IdpConfig* config) {
@@ -89,6 +89,14 @@ static IdpPlugin** idp_load_plugins(const IdpConfig* config) {
     return loaded_plugins;
 }
 
+static void idp_remove_plugins(IdpPlugin** loaded_plugins) {
+    for (size_t i = 0; NULL != loaded_plugins[i]; ++i) {
+        idp_plugin_remove(loaded_plugins[i]);
+    }
+
+    free(loaded_plugins);
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // Main
 ////
@@ -113,13 +121,7 @@ int main() {
     };
 
     IdpPlugin** loaded_plugins = idp_load_plugins(&config);
-
-    // Free the loaded plugins
-    for (size_t i = 0; NULL != loaded_plugins[i]; ++i) {
-        idp_plugin_remove(loaded_plugins[i]);
-    }
-
-    free(loaded_plugins);
+    idp_remove_plugins(loaded_plugins);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
