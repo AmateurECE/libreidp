@@ -36,6 +36,7 @@ if not compiler.has_function('strdup', prefix: '''#include <string.h>''')
 endif
 
 dl = dependency('dl')
+libuv = dependency('libuv')
 
 executable(
   'libreidp',
@@ -46,7 +47,7 @@ executable(
     'source/core-impl/http.c',
   ],
   include_directories: ['include', '../libreidp-runtime/include'],
-  dependencies: [dl, libreidp_runtime],
+  dependencies: [dl, libreidp_runtime, libuv],
 )
 
 ###############################################################################

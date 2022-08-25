@@ -37,7 +37,7 @@
 #include <libreidp/core/http.h>
 
 typedef struct IdpHttpCore {
-    int accept_fd;
+    uv_tcp_t server;
 } IdpHttpCore;
 
 // Initialize an HTTP core

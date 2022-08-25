@@ -34,6 +34,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <uv.h>
 
 #include <libreidp/priv/core/http.h>
 
@@ -142,19 +143,26 @@ int main() {
         },
     };
 
+    uv_loop_t* loop = uv_default_loop();
     IdpPlugin** loaded_plugins = idp_load_plugins(&config);
-
     IdpCoresEnabled cores_enabled = idp_get_requested_cores(loaded_plugins);
+
+    // Setup cores
     if (cores_enabled.http.enabled) {
         cores_enabled.http.core = idp_http_core_new();
         idp_http_core_add_port(cores_enabled.http.core,
             config.http.default_port);
     }
 
+    // Shutdown cores
     if (cores_enabled.http.enabled) {
         idp_http_core_shutdown(cores_enabled.http.core);
     }
+
+    // Cleanup application
+    printf("Cleaning up\n");
     idp_remove_plugins(loaded_plugins);
+    uv_loop_close(loop);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
