@@ -8,7 +8,7 @@
 //
 // CREATED:         08/22/2022
 //
-// LAST EDITED:     08/24/2022
+// LAST EDITED:     08/28/2022
 //
 // Copyright 2022, Ethan D. Twardy
 //
@@ -98,9 +98,24 @@ void idp_http_response_set_body(char* body, size_t length);
 // The HTTP core executor
 typedef struct IdpHttpCore IdpHttpCore;
 
-typedef enum IdpHttpCoreResult {
+typedef enum IdpHttpCoreError {
     IDP_HTTP_CORE_OK,
     IDP_HTTP_CORE_PATH_EXISTS,
+    IDP_HTTP_CORE_LISTEN_ERROR,
+} IdpHttpCoreError;
+
+typedef struct IdpHttpCoreResult {
+    bool ok;
+    union {
+        struct {
+            IdpHttpCoreError error;
+            bool owned;
+            union {
+                const char* borrowed;
+                char* owned;
+            } message;
+        } error;
+    };
 } IdpHttpCoreResult;
 
 typedef int (*IdpHttpHandlerCallback)(IdpHttpRequest* request,

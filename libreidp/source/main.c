@@ -7,7 +7,7 @@
 //
 // CREATED:         08/16/2022
 //
-// LAST EDITED:     08/24/2022
+// LAST EDITED:     08/29/2022
 //
 // Copyright 2022, Ethan D. Twardy
 //
@@ -154,6 +154,14 @@ int main() {
             config.http.default_port);
     }
 
+    // Register application core objects with libuv event loop
+    if (cores_enabled.http.enabled) {
+        idp_http_core_register(cores_enabled.http.core, loop);
+    }
+
+    // Run libuv event loop until completion
+    int result = uv_run(loop, UV_RUN_DEFAULT);
+
     // Shutdown cores
     if (cores_enabled.http.enabled) {
         idp_http_core_shutdown(cores_enabled.http.core);
@@ -163,6 +171,7 @@ int main() {
     printf("Cleaning up\n");
     idp_remove_plugins(loaded_plugins);
     uv_loop_close(loop);
+    return result;
 }
 
 ///////////////////////////////////////////////////////////////////////////////

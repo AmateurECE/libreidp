@@ -7,7 +7,7 @@
 //
 // CREATED:         08/22/2022
 //
-// LAST EDITED:     08/24/2022
+// LAST EDITED:     08/29/2022
 //
 // Copyright 2022, Ethan D. Twardy
 //
@@ -33,11 +33,16 @@
 #ifndef IDP_CORE_IMPL_HTTP_H
 #define IDP_CORE_IMPL_HTTP_H
 
+#include <stdbool.h>
+#include <netinet/in.h>
 #include <uv.h>
 #include <libreidp/core/http.h>
 
 typedef struct IdpHttpCore {
+    struct sockaddr_in address;
+    int port;
     uv_tcp_t server;
+    uv_loop_t* loop;
 } IdpHttpCore;
 
 // Initialize an HTTP core
@@ -54,7 +59,7 @@ void idp_http_core_shutdown(IdpHttpCore* core);
 // necessary to integrate with the rest of the libuv plumbing.
 //
 // NOTE: This must be the last function that's called while setting up!
-void idp_http_core_register(IdpHttpCore* core, uv_loop_t* loop);
+IdpHttpCoreResult idp_http_core_register(IdpHttpCore* core, uv_loop_t* loop);
 
 #endif // IDP_CORE_IMPL_HTTP_H
 
