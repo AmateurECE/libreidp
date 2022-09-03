@@ -7,7 +7,7 @@
 #
 # CREATED:          08/16/2022
 #
-# LAST EDITED:      08/24/2022
+# LAST EDITED:      08/30/2022
 #
 # Copyright 2022, Ethan D. Twardy
 #
@@ -37,6 +37,7 @@ endif
 
 dl = dependency('dl')
 libuv = dependency('libuv')
+llhttp = dependency('llhttp')
 
 executable(
   'libreidp',
@@ -47,7 +48,7 @@ executable(
     'source/core-impl/http.c',
   ],
   include_directories: ['include', '../libreidp-runtime/include'],
-  dependencies: [dl, libreidp_runtime, libuv],
+  dependencies: [dl, libreidp_runtime, libuv, llhttp],
 )
 
 ###############################################################################

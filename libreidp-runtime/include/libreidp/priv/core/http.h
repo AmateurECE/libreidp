@@ -7,7 +7,7 @@
 //
 // CREATED:         08/22/2022
 //
-// LAST EDITED:     08/29/2022
+// LAST EDITED:     09/03/2022
 //
 // Copyright 2022, Ethan D. Twardy
 //
@@ -35,14 +35,21 @@
 
 #include <stdbool.h>
 #include <netinet/in.h>
+#include <llhttp.h>
 #include <uv.h>
 #include <libreidp/core/http.h>
 
 typedef struct IdpHttpCore {
     struct sockaddr_in address;
     int port;
+
+    // libuv state
     uv_tcp_t server;
     uv_loop_t* loop;
+
+    // llhttp state
+    llhttp_t http_parser;
+    llhttp_settings_t parser_settings;
 } IdpHttpCore;
 
 // Initialize an HTTP core

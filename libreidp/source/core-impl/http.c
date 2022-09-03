@@ -7,7 +7,7 @@
 //
 // CREATED:         08/22/2022
 //
-// LAST EDITED:     08/29/2022
+// LAST EDITED:     09/03/2022
 //
 // Copyright 2022, Ethan D. Twardy
 //
@@ -33,14 +33,36 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <llhttp.h>
 #include <libreidp/priv/core/http.h>
 
 static const int DEFAULT_BACKLOG = 10;
 static const char* DEFAULT_LISTEN_ADDRESS = "0.0.0.0";
+static const char* NOT_FOUND_RESPONSE = "\
+HTTP/1.1 404 Not Found\r\n\
+Server: libreidp\r\n\
+Date: Sat, 03 Sep 2022 20:05:17 GMT\r\n\
+Content-Type: text/html\r\n\
+Content-Length: 149\r\n\
+Connection: close\r\n\
+\r\n\
+<html>\r\n\
+<head><title>404 Not Found</title></head>\r\n\
+<body>\r\n\
+<center><h1>404 Not Found</h1></center>\r\n\
+<hr><center>libreidp</center>\r\n\
+</body>\r\n\
+</html>\r\n\
+";
 
 ///////////////////////////////////////////////////////////////////////////////
 // Private API
 ////
+
+static int idp_http_core_on_message_complete(llhttp_t* parser) {
+    printf("Parsed a whole message!\n");
+    return HPE_OK;
+}
 
 static void alloc_buffer(uv_handle_t* handle, size_t suggested_size,
     uv_buf_t* buf)
@@ -65,9 +87,22 @@ static void echo_read(uv_stream_t* client, ssize_t nread, const uv_buf_t* buf)
             uv_close((uv_handle_t*)client, NULL);
         }
     } else if (nread > 0) {
-        uv_write_t* req = malloc(sizeof(uv_write_t));
-        uv_buf_t wrbuf = uv_buf_init(buf->base, nread);
-        uv_write(req, client, &wrbuf, 1, echo_write);
+        IdpHttpCore* core = client->data;
+        int result = llhttp_execute(&core->http_parser, buf->base, nread);
+        if (HPE_OK != result) {
+            fprintf(stderr, "Invalid request received\n");
+            uv_close((uv_handle_t*)client, NULL);
+        } else {
+            uv_write_t* response = malloc(sizeof(uv_write_t));
+            if (NULL == response) {
+                fprintf(stderr, "Couldn't allocate memory for write stream\n");
+                exit(1);
+            }
+            memset(response, 0, sizeof(*response));
+            uv_buf_t response_buffer = uv_buf_init(strdup(NOT_FOUND_RESPONSE),
+                strlen(NOT_FOUND_RESPONSE));
+            uv_write(response, client, &response_buffer, 1, echo_write);
+        }
     }
 
     if (buf->base) {
@@ -83,6 +118,7 @@ static void on_new_connection(uv_stream_t* server, int status) {
 
     uv_tcp_t* client = malloc(sizeof(uv_tcp_t));
     IdpHttpCore* core = server->data;
+    client->data = core;
     uv_tcp_init(core->loop, client);
     if (0 == uv_accept(server, (uv_stream_t*)client)) {
         uv_read_start((uv_stream_t*)client, alloc_buffer, echo_read);
@@ -116,6 +152,12 @@ IdpHttpCore* idp_http_core_new() {
     }
 
     memset(core, 0, sizeof(IdpHttpCore));
+
+    llhttp_settings_init(&core->parser_settings);
+    core->parser_settings.on_message_complete =
+        idp_http_core_on_message_complete;
+    llhttp_init(&core->http_parser, HTTP_BOTH, &core->parser_settings);
+
     return core;
 }
 
@@ -124,6 +166,8 @@ void idp_http_core_add_port(IdpHttpCore* core, int port) {
 }
 
 void idp_http_core_shutdown(IdpHttpCore* core) {
+    llhttp_reset(&core->http_parser);
+    // TODO: Check if uv handle is active here?
     free(core);
 }
 
