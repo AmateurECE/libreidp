@@ -7,7 +7,7 @@
 //
 // CREATED:         08/16/2022
 //
-// LAST EDITED:     08/29/2022
+// LAST EDITED:     09/03/2022
 //
 // Copyright 2022, Ethan D. Twardy
 //
@@ -30,6 +30,7 @@
 // IN THE SOFTWARE.
 ////
 
+#include <signal.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -126,6 +127,42 @@ static IdpCoresEnabled idp_get_requested_cores(IdpPlugin** plugins) {
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+// Core Logic
+////
+
+static void idp_setup_cores(IdpCoresEnabled* cores_enabled, uv_loop_t* loop,
+    const IdpConfig* config)
+{
+    // Setup cores
+    if (cores_enabled->http.enabled) {
+        cores_enabled->http.core = idp_http_core_new();
+        idp_http_core_add_port(cores_enabled->http.core,
+            config->http.default_port);
+    }
+
+    // Register application core objects with libuv event loop
+    if (cores_enabled->http.enabled) {
+        idp_http_core_register(cores_enabled->http.core, loop);
+    }
+}
+
+static void idp_shutdown_cores(IdpCoresEnabled* cores_enabled) {
+    if (cores_enabled->http.enabled) {
+        idp_http_core_shutdown(cores_enabled->http.core);
+    }
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// Signal Handling
+////
+
+void idp_handle_sigint(uv_signal_t* handle, int signum) {
+    if (SIGINT == signum) {
+        uv_stop(handle->loop);
+    }
+}
+
+///////////////////////////////////////////////////////////////////////////////
 // Main
 ////
 
@@ -147,25 +184,15 @@ int main() {
     IdpPlugin** loaded_plugins = idp_load_plugins(&config);
     IdpCoresEnabled cores_enabled = idp_get_requested_cores(loaded_plugins);
 
-    // Setup cores
-    if (cores_enabled.http.enabled) {
-        cores_enabled.http.core = idp_http_core_new();
-        idp_http_core_add_port(cores_enabled.http.core,
-            config.http.default_port);
-    }
-
-    // Register application core objects with libuv event loop
-    if (cores_enabled.http.enabled) {
-        idp_http_core_register(cores_enabled.http.core, loop);
-    }
+    // Intercept sigint to shut down gracefully
+    uv_signal_t sigint = {0};
+    uv_signal_init(loop, &sigint);
+    uv_signal_start_oneshot(&sigint, idp_handle_sigint, SIGINT);
 
     // Run libuv event loop until completion
+    idp_setup_cores(&cores_enabled, loop, &config);
     int result = uv_run(loop, UV_RUN_DEFAULT);
-
-    // Shutdown cores
-    if (cores_enabled.http.enabled) {
-        idp_http_core_shutdown(cores_enabled.http.core);
-    }
+    idp_shutdown_cores(&cores_enabled);
 
     // Cleanup application
     printf("Cleaning up\n");
