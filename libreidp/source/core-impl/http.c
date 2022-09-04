@@ -59,11 +59,6 @@ Connection: close\r\n\
 // Private API
 ////
 
-static int idp_http_core_on_message_complete(llhttp_t* parser) {
-    printf("Parsed a whole message!\n");
-    return HPE_OK;
-}
-
 static void alloc_buffer(uv_handle_t* handle, size_t suggested_size,
     uv_buf_t* buf)
 {
@@ -88,20 +83,11 @@ static void echo_read(uv_stream_t* client, ssize_t nread, const uv_buf_t* buf)
         }
     } else if (nread > 0) {
         IdpHttpCore* core = client->data;
+        core->http_parser.data = client;
         int result = llhttp_execute(&core->http_parser, buf->base, nread);
         if (HPE_OK != result) {
             fprintf(stderr, "Invalid request received\n");
             uv_close((uv_handle_t*)client, NULL);
-        } else {
-            uv_write_t* response = malloc(sizeof(uv_write_t));
-            if (NULL == response) {
-                fprintf(stderr, "Couldn't allocate memory for write stream\n");
-                exit(1);
-            }
-            memset(response, 0, sizeof(*response));
-            uv_buf_t response_buffer = uv_buf_init(strdup(NOT_FOUND_RESPONSE),
-                strlen(NOT_FOUND_RESPONSE));
-            uv_write(response, client, &response_buffer, 1, echo_write);
         }
     }
 
@@ -138,6 +124,23 @@ static IdpHttpCoreResult idp_http_core_result_error_from_libuv(
             },
         },
     };
+}
+
+static int idp_http_core_on_message_complete(llhttp_t* parser) {
+    uv_write_t* response = malloc(sizeof(uv_write_t));
+    if (NULL == response) {
+        fprintf(stderr, "Couldn't allocate memory for write stream\n");
+        exit(1);
+    }
+
+    memset(response, 0, sizeof(*response));
+
+    uv_stream_t* client = parser->data;
+    uv_buf_t response_buffer = uv_buf_init(strdup(NOT_FOUND_RESPONSE),
+        strlen(NOT_FOUND_RESPONSE));
+    uv_write(response, client, &response_buffer, 1, echo_write);
+
+    return HPE_OK;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
