@@ -88,11 +88,18 @@ typedef enum IdpHttpResponseCode {
     IDP_HTTP_404_NOT_FOUND,
 } IdpHttpResponseCode;
 
+const char* idp_http_response_code_to_str(IdpHttpResponseCode code);
+
 typedef struct IdpHttpResponse IdpHttpResponse;
 
 IdpHttpResponse* idp_http_response_new(IdpHttpResponseCode code);
-void idp_http_response_set_header(char* header, char* value);
-void idp_http_response_set_body(char* body, size_t length);
+void idp_http_response_free(IdpHttpResponse* response);
+void idp_http_response_set_header(IdpHttpResponse* response, char* header,
+    char* value);
+void idp_http_response_set_body(IdpHttpResponse* response, char* body,
+    size_t length);
+size_t idp_http_response_get_string_length(IdpHttpResponse* response);
+char* idp_http_response_to_string(IdpHttpResponse* response);
 
 ///////////////////////////////////////////////////////////////////////////////
 // Core Executor

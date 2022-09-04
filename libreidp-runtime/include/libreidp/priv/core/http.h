@@ -7,7 +7,7 @@
 //
 // CREATED:         08/22/2022
 //
-// LAST EDITED:     09/03/2022
+// LAST EDITED:     09/04/2022
 //
 // Copyright 2022, Ethan D. Twardy
 //
@@ -91,6 +91,19 @@ typedef struct IdpHttpRequest {
 
 IdpHttpRequest* idp_http_request_new();
 void idp_http_request_free(IdpHttpRequest* request);
+
+///////////////////////////////////////////////////////////////////////////////
+// Response
+////
+
+typedef struct IdpHttpResponse {
+    IdpHttpResponseCode code;
+    IdpHttpHeader* headers;
+    size_t headers_length;
+    size_t headers_capacity;
+    char* body;
+    size_t body_length;
+} IdpHttpResponse;
 
 #endif // IDP_CORE_IMPL_HTTP_H
 

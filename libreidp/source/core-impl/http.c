@@ -38,13 +38,6 @@
 
 static const int DEFAULT_BACKLOG = 10;
 static const char* DEFAULT_LISTEN_ADDRESS = "0.0.0.0";
-static const char* NOT_FOUND_RESPONSE = "\
-HTTP/1.1 404 Not Found\r\n\
-Server: libreidp\r\n\
-Content-Length: 0\r\n\
-Connection: close\r\n\
-\r\n\
-";
 
 ///////////////////////////////////////////////////////////////////////////////
 // Private API
@@ -118,18 +111,21 @@ static IdpHttpCoreResult idp_http_core_result_error_from_libuv(
 }
 
 static int idp_http_core_on_message_complete(llhttp_t* parser) {
-    uv_write_t* response = malloc(sizeof(uv_write_t));
-    if (NULL == response) {
+    uv_write_t* response_stream = malloc(sizeof(uv_write_t));
+    if (NULL == response_stream) {
         fprintf(stderr, "Couldn't allocate memory for write stream\n");
         exit(1);
     }
+    memset(response_stream, 0, sizeof(*response_stream));
 
-    memset(response, 0, sizeof(*response));
+    IdpHttpResponse* response = idp_http_response_new(IDP_HTTP_404_NOT_FOUND);
+    const size_t length = idp_http_response_get_string_length(response);
+    char* response_string = idp_http_response_to_string(response);
+    idp_http_response_free(response);
 
     uv_stream_t* client = parser->data;
-    uv_buf_t response_buffer = uv_buf_init(strdup(NOT_FOUND_RESPONSE),
-        strlen(NOT_FOUND_RESPONSE));
-    uv_write(response, client, &response_buffer, 1, echo_write);
+    uv_buf_t response_buffer = uv_buf_init(response_string, length);
+    uv_write(response_stream, client, &response_buffer, 1, echo_write);
 
     return HPE_OK;
 }
