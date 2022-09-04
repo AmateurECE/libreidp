@@ -7,7 +7,7 @@
 //
 // CREATED:         08/22/2022
 //
-// LAST EDITED:     09/03/2022
+// LAST EDITED:     09/04/2022
 //
 // Copyright 2022, Ethan D. Twardy
 //
@@ -59,8 +59,8 @@ Connection: close\r\n\
 // Private API
 ////
 
-static void alloc_buffer(uv_handle_t* handle, size_t suggested_size,
-    uv_buf_t* buf)
+static void alloc_buffer(uv_handle_t* handle __attribute__((unused)),
+    size_t suggested_size, uv_buf_t* buf)
 {
     buf->base = malloc(suggested_size);
     buf->len = suggested_size;

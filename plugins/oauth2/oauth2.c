@@ -30,15 +30,22 @@
 // IN THE SOFTWARE.
 ////
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <libreidp/libreidp.h>
+
+static IdpHttpCoreResult oauth2_register_endpoints(IdpHttpCore* core) {
+    fprintf(stderr, "%s: register called with core %p\n", __FILE__,
+        (void*)core);
+    return (IdpHttpCoreResult){.ok = true};
+}
 
 IdpPluginDefinition idp_plugin_definition = {
     .interface = IDP_PLUGIN_HTTP_HANDLER,
     .http = {
         .version = IDP_HTTP_HANDLER_VERSION_UNSTABLE,
         .plugin = {
-            NULL,
+            .register_endpoints = oauth2_register_endpoints,
         },
     },
 };
