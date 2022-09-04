@@ -8,7 +8,7 @@
 //
 // CREATED:         08/22/2022
 //
-// LAST EDITED:     08/28/2022
+// LAST EDITED:     09/03/2022
 //
 // Copyright 2022, Ethan D. Twardy
 //
@@ -75,6 +75,8 @@ typedef struct IdpHttpRequest IdpHttpRequest;
 const char* idp_http_request_get_path(IdpHttpRequest* request);
 const char* idp_http_request_get_header(IdpHttpRequest* request,
     const char* name);
+const char* idp_http_request_get_body(IdpHttpRequest* request);
+size_t idp_http_request_get_body_length(IdpHttpRequest* request);
 
 ///////////////////////////////////////////////////////////////////////////////
 // Response

@@ -39,6 +39,10 @@
 #include <uv.h>
 #include <libreidp/core/http.h>
 
+///////////////////////////////////////////////////////////////////////////////
+// HTTP Core
+////
+
 typedef struct IdpHttpCore {
     struct sockaddr_in address;
     int port;
@@ -67,6 +71,26 @@ void idp_http_core_shutdown(IdpHttpCore* core);
 //
 // NOTE: This must be the last function that's called while setting up!
 IdpHttpCoreResult idp_http_core_register(IdpHttpCore* core, uv_loop_t* loop);
+
+///////////////////////////////////////////////////////////////////////////////
+// Request
+////
+
+typedef struct IdpHttpHeader {
+    char* name;
+    char* value;
+} IdpHttpHeader;
+
+typedef struct IdpHttpRequest {
+    IdpHttpRequestType request_type;
+    char* path;
+    IdpHttpHeader* headers;
+    char* body;
+    size_t body_length;
+} IdpHttpRequest;
+
+IdpHttpRequest* idp_http_request_new();
+void idp_http_request_free(IdpHttpRequest* request);
 
 #endif // IDP_CORE_IMPL_HTTP_H
 

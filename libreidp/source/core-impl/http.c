@@ -194,3 +194,32 @@ IdpHttpCoreResult idp_http_core_register(IdpHttpCore* core, uv_loop_t* loop) {
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+// Request
+////
+
+IdpHttpRequest* idp_http_request_new() {
+    IdpHttpRequest* request = malloc(sizeof(IdpHttpRequest));
+    if (NULL == request) {
+        fprintf(stderr, "Failed to allocate memory for request!\n");
+        exit(1);
+    }
+
+    memset(request, 0, sizeof(IdpHttpRequest));
+    static const size_t DEFAULT_HEADER_SLOTS = 16;
+    request->headers = malloc(DEFAULT_HEADER_SLOTS * sizeof(IdpHttpHeader));
+    if (NULL == request->headers) {
+        free(request);
+        fprintf(stderr, "Failed to allocate memory for request headers!\n");
+        exit(1);
+    }
+    memset(request->headers, 0, DEFAULT_HEADER_SLOTS * sizeof(IdpHttpHeader));
+
+    return request;
+}
+
+void idp_http_request_free(IdpHttpRequest* request) {
+    free(request->headers);
+    free(request);
+}
+
+///////////////////////////////////////////////////////////////////////////////

@@ -7,7 +7,7 @@
 //
 // CREATED:         08/22/2022
 //
-// LAST EDITED:     08/22/2022
+// LAST EDITED:     09/03/2022
 //
 // Copyright 2022, Ethan D. Twardy
 //
@@ -31,5 +31,30 @@
 ////
 
 #include <libreidp/priv/core/http.h>
+
+///////////////////////////////////////////////////////////////////////////////
+// Request
+////
+
+const char* idp_http_request_get_path(IdpHttpRequest* request)
+{ return request->path; }
+
+const char* idp_http_request_get_header(IdpHttpRequest* request,
+    const char* name)
+{
+    for (size_t i = 0; NULL != request->headers[i].name; ++i) {
+        if (name == request->headers[i].name) {
+            return request->headers[i].value;
+        }
+    }
+
+    return NULL;
+}
+
+const char* idp_http_request_get_body(IdpHttpRequest* request)
+{ return request->body; }
+
+size_t idp_http_request_get_body_length(IdpHttpRequest* request)
+{ return request->body_length; }
 
 ///////////////////////////////////////////////////////////////////////////////
