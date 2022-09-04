@@ -153,6 +153,40 @@ static void idp_shutdown_cores(IdpCoresEnabled* cores_enabled) {
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+// Plugin Initialization
+////
+
+static void idp_initialize_http_interface(IdpCoresEnabled* cores_enabled,
+    IdpPlugin* plugin)
+{
+    IdpHttpInterface* http = idp_plugin_get_http_interface(plugin);
+    if (!cores_enabled->http.enabled) {
+        fprintf(stderr, "Error: A plugin has requested a core that has not"
+            " been enabled.\n");
+    }
+
+    if (NULL == http) {
+        fprintf(stderr, "Error: A plugin is erroneously reporting to support"
+            " an interface that it does not.\n");
+    }
+
+    http->register_endpoints(cores_enabled->http.core);
+}
+
+static void idp_initialize_plugin_interfaces(IdpCoresEnabled* cores_enabled,
+    IdpPlugin** loaded_plugins)
+{
+    for (size_t i = 0; NULL != loaded_plugins[i]; ++i) {
+        IdpPlugin* plugin = loaded_plugins[i];
+        IdpPluginInterface interface_type = idp_plugin_get_interface(plugin);
+
+        if (IDP_PLUGIN_HTTP == interface_type) {
+            idp_initialize_http_interface(cores_enabled, plugin);
+        }
+    }
+}
+
+///////////////////////////////////////////////////////////////////////////////
 // Signal Handling
 ////
 
@@ -191,6 +225,7 @@ int main() {
 
     // Run libuv event loop until completion
     idp_setup_cores(&cores_enabled, loop, &config);
+    idp_initialize_plugin_interfaces(&cores_enabled, loaded_plugins);
     int result = uv_run(loop, UV_RUN_DEFAULT);
     idp_shutdown_cores(&cores_enabled);
 
