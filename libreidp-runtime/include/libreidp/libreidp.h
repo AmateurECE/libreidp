@@ -43,10 +43,7 @@ typedef enum IdpPluginInterface {
 typedef struct IdpPluginDefinition {
     IdpPluginInterface interface;
     union {
-        struct {
-            IdpHttpInterfaceVersion version;
-            IdpHttpInterface plugin;
-        } http;
+        IdpHttpInterface http;
     };
 } IdpPluginDefinition;
 

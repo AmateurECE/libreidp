@@ -41,6 +41,7 @@ IdpPlugin* idp_plugin_load(char* filename);
 void idp_plugin_remove(IdpPlugin* plugin);
 
 IdpPluginInterface idp_plugin_get_interface(const IdpPlugin* plugin);
+IdpHttpInterface* idp_plugin_get_http_interface(IdpPlugin* plugin);
 
 #endif // PLUGIN_LOADER_H
 

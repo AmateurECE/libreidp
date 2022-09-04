@@ -40,6 +40,7 @@ typedef enum IdpHttpInterfaceVersion {
 } IdpHttpInterfaceVersion;
 
 typedef struct IdpHttpInterface {
+    IdpHttpInterfaceVersion version;
     IdpHttpCoreResult (*register_endpoints)(IdpHttpCore* core);
 } IdpHttpInterface;
 

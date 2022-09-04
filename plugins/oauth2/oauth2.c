@@ -44,9 +44,7 @@ IdpPluginDefinition idp_plugin_definition = {
     .interface = IDP_PLUGIN_HTTP,
     .http = {
         .version = IDP_HTTP_INTERFACE_UNSTABLE,
-        .plugin = {
-            .register_endpoints = oauth2_register_endpoints,
-        },
+        .register_endpoints = oauth2_register_endpoints,
     },
 };
 

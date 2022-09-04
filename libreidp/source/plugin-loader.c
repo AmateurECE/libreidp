@@ -88,4 +88,12 @@ void idp_plugin_remove(IdpPlugin* plugin) {
 IdpPluginInterface idp_plugin_get_interface(const IdpPlugin* plugin)
 { return plugin->definition->interface; }
 
+IdpHttpInterface* idp_plugin_get_http_interface(IdpPlugin* plugin) {
+    if (IDP_PLUGIN_HTTP != plugin->definition->interface) {
+        return NULL;
+    }
+
+    return &plugin->definition->http;
+}
+
 ///////////////////////////////////////////////////////////////////////////////
