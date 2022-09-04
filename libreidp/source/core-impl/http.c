@@ -41,18 +41,9 @@ static const char* DEFAULT_LISTEN_ADDRESS = "0.0.0.0";
 static const char* NOT_FOUND_RESPONSE = "\
 HTTP/1.1 404 Not Found\r\n\
 Server: libreidp\r\n\
-Date: Sat, 03 Sep 2022 20:05:17 GMT\r\n\
-Content-Type: text/html\r\n\
-Content-Length: 149\r\n\
+Content-Length: 0\r\n\
 Connection: close\r\n\
 \r\n\
-<html>\r\n\
-<head><title>404 Not Found</title></head>\r\n\
-<body>\r\n\
-<center><h1>404 Not Found</h1></center>\r\n\
-<hr><center>libreidp</center>\r\n\
-</body>\r\n\
-</html>\r\n\
 ";
 
 ///////////////////////////////////////////////////////////////////////////////

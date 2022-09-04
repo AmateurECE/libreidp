@@ -168,8 +168,8 @@ void idp_handle_sigint(uv_signal_t* handle, int signum) {
 
 int main() {
     // Static configuration (for now).
-    char* plugins[] = { "dummy", NULL, };
-    char* plugin_load_directories[] = { "plugins/dummy", NULL, };
+    char* plugins[] = { "oauth2", NULL, };
+    char* plugin_load_directories[] = { "plugins/oauth2", NULL, };
     const IdpConfig config = {
         .auth_form_path = "/auth",
         .auth_form_uri = "", // Authentication form resides on our server
