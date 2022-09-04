@@ -8,7 +8,7 @@
 //
 // CREATED:         08/22/2022
 //
-// LAST EDITED:     09/03/2022
+// LAST EDITED:     09/04/2022
 //
 // Copyright 2022, Ethan D. Twardy
 //
@@ -34,6 +34,7 @@
 #ifndef IDP_HTTP_H
 #define IDP_HTTP_H
 
+#include <stdbool.h>
 #include <stddef.h>
 
 ///////////////////////////////////////////////////////////////////////////////

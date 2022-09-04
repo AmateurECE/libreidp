@@ -7,7 +7,7 @@
 //
 // CREATED:         08/20/2022
 //
-// LAST EDITED:     08/20/2022
+// LAST EDITED:     09/04/2022
 //
 // Copyright 2022, Ethan D. Twardy
 //
@@ -34,7 +34,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <libreidp/plugin.h>
+#include <libreidp/libreidp.h>
 #include "plugin-loader.h"
 
 typedef struct IdpPlugin {

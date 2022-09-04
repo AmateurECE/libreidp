@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// NAME:            interfaces.c
+// NAME:            plugin.c
 //
 // AUTHOR:          Ethan D. Twardy <ethan.twardy@gmail.com>
 //
@@ -7,7 +7,7 @@
 //
 // CREATED:         08/24/2022
 //
-// LAST EDITED:     08/24/2022
+// LAST EDITED:     09/04/2022
 //
 // Copyright 2022, Ethan D. Twardy
 //
@@ -30,7 +30,7 @@
 // IN THE SOFTWARE.
 ////
 
-#include <libreidp/interfaces.h>
+#include <libreidp/libreidp.h>
 
 ///////////////////////////////////////////////////////////////////////////////
 // Public API

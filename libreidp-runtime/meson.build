@@ -7,7 +7,7 @@
 #
 # CREATED:          08/17/2022
 #
-# LAST EDITED:      08/24/2022
+# LAST EDITED:      09/03/2022
 #
 # Copyright 2022, Ethan D. Twardy
 #
@@ -41,7 +41,7 @@ libreidp_runtime_library = shared_library(
   'reidp-runtime',
   sources: [
     'source/core/http.c',
-    'source/interfaces.c',
+    'source/plugin.c',
   ],
   soversion: meson.project_version(),
   include_directories: ['include'],

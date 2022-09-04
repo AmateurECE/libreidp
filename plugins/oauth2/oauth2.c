@@ -7,7 +7,7 @@
 //
 // CREATED:         08/17/2022
 //
-// LAST EDITED:     09/03/2022
+// LAST EDITED:     09/04/2022
 //
 // Copyright 2022, Ethan D. Twardy
 //
@@ -35,7 +35,12 @@
 
 IdpPluginDefinition idp_plugin_definition = {
     .interface = IDP_PLUGIN_HTTP_HANDLER,
-    .plugin = NULL,
+    .http = {
+        .version = IDP_HTTP_HANDLER_VERSION_UNSTABLE,
+        .plugin = {
+            NULL,
+        },
+    },
 };
 
 ///////////////////////////////////////////////////////////////////////////////

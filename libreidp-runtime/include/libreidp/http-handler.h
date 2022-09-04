@@ -7,7 +7,7 @@
 //
 // CREATED:         08/19/2022
 //
-// LAST EDITED:     08/20/2022
+// LAST EDITED:     09/04/2022
 //
 // Copyright 2022, Ethan D. Twardy
 //
@@ -33,9 +33,15 @@
 #ifndef IDP_HTTP_HANDLER_H
 #define IDP_HTTP_HANDLER_H
 
+#include <libreidp/core/http.h>
+
 typedef enum IdpHttpHandlerVersion {
     IDP_HTTP_HANDLER_VERSION_UNSTABLE,
 } IdpHttpHandlerVersion;
+
+typedef struct IdpHttpHandlerPlugin {
+    IdpHttpCoreResult (*register_endpoints)(IdpHttpCore* core);
+} IdpHttpHandlerPlugin;
 
 #endif // IDP_HTTP_HANDLER_H
 

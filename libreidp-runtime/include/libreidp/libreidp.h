@@ -7,7 +7,7 @@
 //
 // CREATED:         08/19/2022
 //
-// LAST EDITED:     08/20/2022
+// LAST EDITED:     09/04/2022
 //
 // Copyright 2022, Ethan D. Twardy
 //
@@ -34,8 +34,23 @@
 #define IDP_LIBREIDP_H
 
 #include <libreidp/http-handler.h>
-#include <libreidp/interfaces.h>
-#include <libreidp/plugin.h>
+
+typedef enum IdpPluginInterface {
+    IDP_PLUGIN_NONE,
+    IDP_PLUGIN_HTTP_HANDLER,
+} IdpPluginInterface;
+
+typedef struct IdpPluginDefinition {
+    IdpPluginInterface interface;
+    union {
+        struct {
+            IdpHttpHandlerPlugin plugin;
+            IdpHttpHandlerVersion version;
+        } http;
+    };
+} IdpPluginDefinition;
+
+const char* idp_plugin_interface_to_str(IdpPluginInterface interface);
 
 #endif // IDP_LIBREIDP_H
 

@@ -7,7 +7,7 @@
 //
 // CREATED:         08/19/2022
 //
-// LAST EDITED:     08/24/2022
+// LAST EDITED:     09/04/2022
 //
 // Copyright 2022, Ethan D. Twardy
 //
@@ -33,7 +33,7 @@
 #ifndef PLUGIN_LOADER_H
 #define PLUGIN_LOADER_H
 
-#include <libreidp/interfaces.h>
+#include <libreidp/libreidp.h>
 
 typedef struct IdpPlugin IdpPlugin;
 
