@@ -1,5 +1,5 @@
 ///////////////////////////////////////////////////////////////////////////////
-// NAME:            http-handler.h
+// NAME:            http.h
 //
 // AUTHOR:          Ethan D. Twardy <ethan.twardy@gmail.com>
 //
@@ -30,19 +30,19 @@
 // IN THE SOFTWARE.
 ////
 
-#ifndef IDP_HTTP_HANDLER_H
-#define IDP_HTTP_HANDLER_H
+#ifndef IDP_INTERFACES_HTTP_H
+#define IDP_INTERFACES_HTTP_H
 
 #include <libreidp/core/http.h>
 
-typedef enum IdpHttpHandlerVersion {
-    IDP_HTTP_HANDLER_VERSION_UNSTABLE,
-} IdpHttpHandlerVersion;
+typedef enum IdpHttpInterfaceVersion {
+    IDP_HTTP_INTERFACE_UNSTABLE,
+} IdpHttpInterfaceVersion;
 
-typedef struct IdpHttpHandlerPlugin {
+typedef struct IdpHttpInterface {
     IdpHttpCoreResult (*register_endpoints)(IdpHttpCore* core);
-} IdpHttpHandlerPlugin;
+} IdpHttpInterface;
 
-#endif // IDP_HTTP_HANDLER_H
+#endif // IDP_INTERFACES_HTTP_H
 
 ///////////////////////////////////////////////////////////////////////////////

@@ -33,19 +33,19 @@
 #ifndef IDP_LIBREIDP_H
 #define IDP_LIBREIDP_H
 
-#include <libreidp/http-handler.h>
+#include <libreidp/interfaces/http.h>
 
 typedef enum IdpPluginInterface {
     IDP_PLUGIN_NONE,
-    IDP_PLUGIN_HTTP_HANDLER,
+    IDP_PLUGIN_HTTP,
 } IdpPluginInterface;
 
 typedef struct IdpPluginDefinition {
     IdpPluginInterface interface;
     union {
         struct {
-            IdpHttpHandlerPlugin plugin;
-            IdpHttpHandlerVersion version;
+            IdpHttpInterfaceVersion version;
+            IdpHttpInterface plugin;
         } http;
     };
 } IdpPluginDefinition;

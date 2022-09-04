@@ -41,9 +41,9 @@ static IdpHttpCoreResult oauth2_register_endpoints(IdpHttpCore* core) {
 }
 
 IdpPluginDefinition idp_plugin_definition = {
-    .interface = IDP_PLUGIN_HTTP_HANDLER,
+    .interface = IDP_PLUGIN_HTTP,
     .http = {
-        .version = IDP_HTTP_HANDLER_VERSION_UNSTABLE,
+        .version = IDP_HTTP_INTERFACE_UNSTABLE,
         .plugin = {
             .register_endpoints = oauth2_register_endpoints,
         },

@@ -7,7 +7,7 @@
 //
 // CREATED:         08/16/2022
 //
-// LAST EDITED:     09/03/2022
+// LAST EDITED:     09/04/2022
 //
 // Copyright 2022, Ethan D. Twardy
 //
@@ -115,7 +115,7 @@ static IdpCoresEnabled idp_get_requested_cores(IdpPlugin** plugins) {
 
     for (size_t i = 0; NULL != plugins[i]; ++i) {
         switch(idp_plugin_get_interface(plugins[i])) {
-        case IDP_PLUGIN_HTTP_HANDLER:
+        case IDP_PLUGIN_HTTP:
             printf("Enabling HTTP core\n");
             cores_enabled.http.enabled = true;
             break;
