@@ -3,11 +3,12 @@
 #
 # AUTHOR:           Ethan D. Twardy <ethan.twardy@gmail.com>
 #
-# DESCRIPTION:      Build script for the "dummy" plugin, an empty test plugin.
+# DESCRIPTION:      Build script for the OAuth2 plugin, which implements the
+#                   OAuth2 standard.
 #
 # CREATED:          08/17/2022
 #
-# LAST EDITED:      08/17/2022
+# LAST EDITED:      09/03/2022
 #
 # Copyright 2022, Ethan D. Twardy
 #
@@ -30,9 +31,9 @@
 # IN THE SOFTWARE.
 ###
 
-libreidp_dummy = shared_library(
-  'reidp-dummy',
-  'dummy.c',
+libreidp_oauth2 = shared_library(
+  'reidp-oauth2',
+  'oauth2.c',
   soversion: '0.1.0',
   include_directories: ['../../libreidp-runtime/include'],
 )

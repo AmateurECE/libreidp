@@ -1,14 +1,13 @@
 ///////////////////////////////////////////////////////////////////////////////
-// NAME:            dummy.c
+// NAME:            oauth2.c
 //
 // AUTHOR:          Ethan D. Twardy <ethan.twardy@gmail.com>
 //
-// DESCRIPTION:     A simple dummy plugin for "engineering confidence" of the
-//                  plugin loading system.
+// DESCRIPTION:     Plugin for exposing an OAuth2 identity provider.
 //
 // CREATED:         08/17/2022
 //
-// LAST EDITED:     08/20/2022
+// LAST EDITED:     09/03/2022
 //
 // Copyright 2022, Ethan D. Twardy
 //
