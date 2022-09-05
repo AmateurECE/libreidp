@@ -203,3 +203,48 @@ char* idp_http_response_to_string(IdpHttpResponse* response) {
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+// Context
+////
+
+// This object holds state for each request while the request is executing.
+typedef struct IdpHttpContext {
+    IdpHttpResponse* response;
+    IdpHttpResponseOwnership ownership;
+} IdpHttpContext;
+
+// Tell the HTTP core whether it's responsible for free(3)'ing the response.
+void idp_http_context_set_response(IdpHttpContext* context,
+    IdpHttpResponse* response, IdpHttpResponseOwnership ownership)
+{
+    context->response = response;
+    context->ownership = ownership;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// Core
+////
+
+IdpHttpCoreResult idp_http_core_add_route(IdpHttpCore* core,
+    IdpHttpRequestType request_type, char* path,
+    IdpHttpHandlerCallback* handler, void* handler_state)
+{
+    if (core->routes_length >= core->routes_capacity) {
+        const size_t capacity = 2 * core->routes_capacity;
+        IdpHttpRoute* routes = realloc(core->routes, capacity);
+        if (NULL == routes) {
+            perror("couldn't realloc routes");
+            exit(1);
+        }
+
+        core->routes = routes;
+        core->routes_capacity = capacity;
+    }
+
+    core->routes[core->routes_length++] = (IdpHttpRoute){
+        .request_type = request_type, .path = path, .handler = handler,
+        .handler_data = handler_state,
+    };
+    return (IdpHttpCoreResult){.ok = true};
+}
+
+///////////////////////////////////////////////////////////////////////////////

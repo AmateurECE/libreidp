@@ -8,7 +8,7 @@
 #
 # CREATED:          08/17/2022
 #
-# LAST EDITED:      09/03/2022
+# LAST EDITED:      09/04/2022
 #
 # Copyright 2022, Ethan D. Twardy
 #
@@ -36,6 +36,7 @@ libreidp_oauth2 = shared_library(
   'oauth2.c',
   soversion: '0.1.0',
   include_directories: ['../../libreidp-runtime/include'],
+  dependencies: [libreidp_runtime],
 )
 
 ###############################################################################

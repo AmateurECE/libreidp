@@ -140,13 +140,23 @@ IdpHttpCore* idp_http_core_new() {
         perror("couldn't allocate memory for HTTP core");
         exit(1);
     }
-
     memset(core, 0, sizeof(IdpHttpCore));
 
+    // HTTP parser
     llhttp_settings_init(&core->parser_settings);
     core->parser_settings.on_message_complete =
         idp_http_core_on_message_complete;
     llhttp_init(&core->http_parser, HTTP_BOTH, &core->parser_settings);
+
+    // HTTP routes
+    static const size_t ROUTES_STEP = 10;
+    core->routes_capacity = ROUTES_STEP;
+    core->routes = malloc(ROUTES_STEP * sizeof(IdpHttpRoute));
+    if (NULL == core->routes) {
+        perror("couldn't allocate memory for HTTP routes");
+        free(core);
+        exit(1);
+    }
 
     return core;
 }

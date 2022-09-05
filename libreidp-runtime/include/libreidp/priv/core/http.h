@@ -43,6 +43,13 @@
 // HTTP Core
 ////
 
+typedef struct IdpHttpRoute {
+    char* path;
+    IdpHttpRequestType request_type;
+    IdpHttpHandlerCallback* handler;
+    void* handler_data;
+} IdpHttpRoute;
+
 typedef struct IdpHttpCore {
     struct sockaddr_in address;
     int port;
@@ -54,6 +61,11 @@ typedef struct IdpHttpCore {
     // llhttp state
     llhttp_t http_parser;
     llhttp_settings_t parser_settings;
+
+    // Route handlers
+    IdpHttpRoute* routes;
+    size_t routes_length;
+    size_t routes_capacity;
 } IdpHttpCore;
 
 // Initialize an HTTP core

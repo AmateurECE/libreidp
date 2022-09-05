@@ -34,10 +34,17 @@
 #include <stdlib.h>
 #include <libreidp/libreidp.h>
 
-static IdpHttpCoreResult oauth2_register_endpoints(IdpHttpCore* core) {
-    fprintf(stderr, "%s: register called with core %p\n", __FILE__,
-        (void*)core);
+IdpHttpCoreResult root(IdpHttpRequest* request, IdpHttpContext* context,
+    void* data)
+{
+    printf("\"/\" => 200 OK");
+    IdpHttpResponse* response = idp_http_response_new(IDP_HTTP_200_OK);
+    idp_http_context_set_response(context, response, IDP_HTTP_RESPONSE_OWNING);
     return (IdpHttpCoreResult){.ok = true};
+}
+
+static IdpHttpCoreResult oauth2_register_endpoints(IdpHttpCore* core) {
+    return idp_http_core_add_route(core, IDP_HTTP_GET, "/", root, NULL);
 }
 
 IdpPluginDefinition idp_plugin_definition = {

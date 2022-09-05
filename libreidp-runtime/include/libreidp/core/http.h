@@ -47,22 +47,6 @@ typedef struct IdpHttpCoreConfig {
 } IdpHttpCoreConfig;
 
 ///////////////////////////////////////////////////////////////////////////////
-// Context
-////
-
-// This object holds state for each request while the request is executing.
-typedef struct IdpHttpContext IdpHttpContext;
-
-typedef enum IdpHttpResponseOwnership {
-    IDP_HTTP_RESPONSE_OWNING,
-    IDP_HTTP_RESPONSE_BORROWING,
-} IdpHttpResponseOwnership;
-
-// Tell the HTTP core whether it's responsible for free(3)'ing the response.
-void idp_http_context_set_response_ownership(IdpHttpContext* context,
-    IdpHttpResponseOwnership ownership);
-
-///////////////////////////////////////////////////////////////////////////////
 // Request
 ////
 
@@ -102,6 +86,22 @@ size_t idp_http_response_get_string_length(IdpHttpResponse* response);
 char* idp_http_response_to_string(IdpHttpResponse* response);
 
 ///////////////////////////////////////////////////////////////////////////////
+// Context
+////
+
+// This object holds state for each request while the request is executing.
+typedef struct IdpHttpContext IdpHttpContext;
+
+typedef enum IdpHttpResponseOwnership {
+    IDP_HTTP_RESPONSE_OWNING,
+    IDP_HTTP_RESPONSE_BORROWING,
+} IdpHttpResponseOwnership;
+
+// Tell the HTTP core whether it's responsible for free(3)'ing the response.
+void idp_http_context_set_response(IdpHttpContext* context,
+    IdpHttpResponse* response, IdpHttpResponseOwnership ownership);
+
+///////////////////////////////////////////////////////////////////////////////
 // Core Executor
 ////
 
@@ -128,11 +128,12 @@ typedef struct IdpHttpCoreResult {
     };
 } IdpHttpCoreResult;
 
-typedef int (*IdpHttpHandlerCallback)(IdpHttpRequest* request,
+typedef IdpHttpCoreResult IdpHttpHandlerCallback(IdpHttpRequest* request,
     IdpHttpContext* context, void* handler_state);
 
-IdpHttpCoreResult idp_http_core_add_route(IdpHttpRequestType request_type,
-    char* path, IdpHttpHandlerCallback handler, void* handler_state);
+IdpHttpCoreResult idp_http_core_add_route(IdpHttpCore* core,
+    IdpHttpRequestType request_type, char* path,
+    IdpHttpHandlerCallback* handler, void* handler_state);
 
 #endif // IDP_HTTP_H
 
