@@ -59,14 +59,61 @@ static IdpHttpCoreResult idp_http_core_result_error_from_libuv(
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-// Routing
+// Message Handling
 ////
 
-static void idp_http_core_route_request(IdpHttpCore* core,
+static IdpHttpCoreResult idp_http_core_route_request(IdpHttpCore* core,
     IdpHttpContext* context, IdpHttpRequest* request)
 {
+    const char* path = idp_http_request_get_path(request);
+    IdpHttpRequestType request_type = idp_http_request_get_type(request);
+    for (size_t i = 0; i < core->routes_length; ++i) {
+        if (!strcmp(path, core->routes[i].path)
+            && request_type == core->routes[i].request_type)
+        {
+            return core->routes[i].handler(request, context,
+                core->routes[i].handler_data);
+        }
+    }
+
     IdpHttpResponse* response = idp_http_response_new(IDP_HTTP_404_NOT_FOUND);
     idp_http_context_set_response(context, response, IDP_HTTP_RESPONSE_OWNING);
+    return (IdpHttpCoreResult){.ok = true};
+}
+
+typedef struct IdpHttpRequestCompletionResult {
+    bool ok;
+    bool empty;
+    uv_buf_t buffer;
+} IdpHttpRequestCompletionResult;
+
+static IdpHttpRequestCompletionResult idp_http_core_complete_request(
+    IdpHttpCore* core, IdpHttpRequest* request)
+{
+    IdpHttpContext context = {0};
+    IdpHttpCoreResult result = idp_http_core_route_request(core, &context,
+        request);
+    if (!result.ok) {
+        fprintf(stderr, "ERROR: %s\n", result.error.message.borrowed);
+        if (result.error.owned) {
+            free(result.error.message.owned);
+        }
+        return (IdpHttpRequestCompletionResult){.ok = true, .empty = true};
+    } else if (NULL == context.response) {
+        return (IdpHttpRequestCompletionResult){.ok = true, .empty = true};
+    }
+
+    // Serialize the response object
+    size_t length = idp_http_response_get_string_length(context.response);
+    char* response_string = idp_http_response_to_string(context.response);
+    if (IDP_HTTP_RESPONSE_OWNING == context.ownership) {
+        idp_http_response_free(context.response);
+    }
+
+    return (IdpHttpRequestCompletionResult){
+        .ok = true, .empty = false,
+        .buffer = uv_buf_init(response_string, length),
+    };
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -91,25 +138,12 @@ static int idp_http_core_on_message_complete(llhttp_t* parser) {
 
     uv_stream_t* client = parser->data;
     IdpHttpCore* core = client->data;
-
-    // Route the request to the handler
-    IdpHttpContext context = {0};
-    idp_http_core_route_request(core, &context, NULL);
-    if (NULL == context.response) {
-        return HPE_OK;
+    IdpHttpRequestCompletionResult response = idp_http_core_complete_request(
+        core, NULL);
+    if (response.ok && !response.empty) {
+        uv_write(response_stream, client, &response.buffer, 1,
+            idp_http_core_connection_write);
     }
-
-    // Serialize the response object
-    size_t length = idp_http_response_get_string_length(context.response);
-    char* response_string = idp_http_response_to_string(context.response);
-    if (IDP_HTTP_RESPONSE_OWNING == context.ownership) {
-        idp_http_response_free(context.response);
-    }
-
-    // Write the response to the client
-    uv_buf_t response_buffer = uv_buf_init(response_string, length);
-    uv_write(response_stream, client, &response_buffer, 1,
-        idp_http_core_connection_write);
 
     return HPE_OK;
 }

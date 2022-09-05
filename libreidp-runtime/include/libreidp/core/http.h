@@ -57,6 +57,7 @@ typedef enum IdpHttpRequestType {
 
 typedef struct IdpHttpRequest IdpHttpRequest;
 
+IdpHttpRequestType idp_http_request_get_type(IdpHttpRequest* request);
 const char* idp_http_request_get_path(IdpHttpRequest* request);
 const char* idp_http_request_get_header(IdpHttpRequest* request,
     const char* name);

@@ -53,6 +53,9 @@ const char* idp_http_request_get_header(IdpHttpRequest* request,
     return NULL;
 }
 
+IdpHttpRequestType idp_http_request_get_type(IdpHttpRequest* request)
+{ return request->request_type; }
+
 const char* idp_http_request_get_body(IdpHttpRequest* request)
 { return request->body; }
 
