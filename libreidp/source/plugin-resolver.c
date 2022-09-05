@@ -7,7 +7,7 @@
 //
 // CREATED:         08/17/2022
 //
-// LAST EDITED:     08/18/2022
+// LAST EDITED:     09/05/2022
 //
 // Copyright 2022, Ethan D. Twardy
 //
@@ -37,12 +37,11 @@
 #include <string.h>
 #include <sys/types.h>
 
+#include <libreidp/vector.h>
 #include "plugin-resolver.h"
 
 typedef struct IdpPluginResolver {
-    char** plugin_load_directories;
-    size_t length;
-    size_t capacity;
+    IdpVector* directories;
 } IdpPluginResolver;
 
 static const char* PLUGIN_NAME_FORMAT = "libreidp-%s.so";
@@ -122,50 +121,31 @@ IdpPluginResolver* idp_plugin_resolver_new() {
     }
 
     memset(resolver, 0, sizeof(*resolver));
-    resolver->capacity = 8;
-    resolver->plugin_load_directories = calloc(resolver->capacity,
-        sizeof(char*));
-    if (NULL == resolver->plugin_load_directories) {
-        perror("couldn't allocate memory for plugin resolver");
-        exit(1);
-    }
-
+    resolver->directories = idp_vector_new(sizeof(char*), free);
     return resolver;
 }
 
 void idp_plugin_resolver_free(IdpPluginResolver* resolver) {
-    for (size_t i = 0; i < resolver->length; ++i) {
-        free(resolver->plugin_load_directories[i]);
-    }
-
-    free(resolver->plugin_load_directories);
+    idp_vector_free(resolver->directories);
     free(resolver);
 }
 
 void idp_plugin_resolver_add_directory(IdpPluginResolver* resolver,
     char* load_directory)
 {
-    if (resolver->length >= resolver->capacity) {
-        size_t new_capacity = resolver->capacity * 2;
-        char** new_array = realloc(
-            resolver->plugin_load_directories, new_capacity * sizeof(char*));
-        if (NULL == new_array) {
-            perror("couldn't allocate memory for plugin directory list");
-            exit(1);
-        }
-        resolver->plugin_load_directories = new_array;
-        resolver->capacity = new_capacity;
-    }
-
-    resolver->plugin_load_directories[resolver->length++] = load_directory;
+    char** directory = idp_vector_reserve(resolver->directories);
+    *directory = load_directory;
 }
 
 char* idp_plugin_resolver_get_plugin_path(IdpPluginResolver* resolver,
     const char* plugin_name)
 {
-    for (size_t i = 0; i < resolver->length; ++i) {
-        char* plugin_path = get_plugin_path_for_name_in_dir(
-            resolver->plugin_load_directories[i], plugin_name);
+    IdpVectorIter iterator = {0};
+    idp_vector_iter_init(&iterator, resolver->directories);
+    char** directory = NULL;
+    while (NULL != (directory = idp_vector_iter_next(&iterator))) {
+        char* plugin_path = get_plugin_path_for_name_in_dir(*directory,
+            plugin_name);
         if (NULL != plugin_path) {
             return plugin_path;
         }

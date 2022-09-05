@@ -7,7 +7,7 @@
 //
 // CREATED:         08/22/2022
 //
-// LAST EDITED:     09/04/2022
+// LAST EDITED:     09/05/2022
 //
 // Copyright 2022, Ethan D. Twardy
 //
@@ -67,12 +67,14 @@ static IdpHttpCoreResult idp_http_core_route_request(IdpHttpCore* core,
 {
     const char* path = idp_http_request_get_path(request);
     IdpHttpRequestType request_type = idp_http_request_get_type(request);
-    for (size_t i = 0; i < core->routes_length; ++i) {
-        if (!strcmp(path, core->routes[i].path)
-            && request_type == core->routes[i].request_type)
+
+    IdpVectorIter iterator = {0};
+    IdpHttpRoute* route = NULL;
+    idp_vector_iter_init(&iterator, core->routes);
+    while (NULL != (route = idp_vector_iter_next(&iterator))) {
+        if (!strcmp(path, route->path) && request_type == route->request_type)
         {
-            return core->routes[i].handler(request, context,
-                core->routes[i].handler_data);
+            return route->handler(request, context, route->handler_data);
         }
     }
 
@@ -214,16 +216,8 @@ IdpHttpCore* idp_http_core_new() {
         idp_http_core_on_message_complete;
     llhttp_init(&core->http_parser, HTTP_BOTH, &core->parser_settings);
 
-    // HTTP routes
-    static const size_t ROUTES_STEP = 10;
-    core->routes_capacity = ROUTES_STEP;
-    core->routes = malloc(ROUTES_STEP * sizeof(IdpHttpRoute));
-    if (NULL == core->routes) {
-        perror("couldn't allocate memory for HTTP routes");
-        free(core);
-        exit(1);
-    }
-
+    core->routes = idp_vector_new(sizeof(IdpHttpRoute),
+        (IdpVectorFreeFn*)idp_http_route_free);
     return core;
 }
 
@@ -268,20 +262,13 @@ IdpHttpRequest* idp_http_request_new() {
     }
 
     memset(request, 0, sizeof(IdpHttpRequest));
-    static const size_t DEFAULT_HEADER_SLOTS = 16;
-    request->headers = malloc(DEFAULT_HEADER_SLOTS * sizeof(IdpHttpHeader));
-    if (NULL == request->headers) {
-        free(request);
-        fprintf(stderr, "Failed to allocate memory for request headers!\n");
-        exit(1);
-    }
-    memset(request->headers, 0, DEFAULT_HEADER_SLOTS * sizeof(IdpHttpHeader));
-
+    request->headers = idp_vector_new(sizeof(IdpHttpHeader),
+        (IdpVectorFreeFn*)idp_http_header_free);
     return request;
 }
 
 void idp_http_request_free(IdpHttpRequest* request) {
-    free(request->headers);
+    idp_vector_free(request->headers);
     free(request);
 }
 

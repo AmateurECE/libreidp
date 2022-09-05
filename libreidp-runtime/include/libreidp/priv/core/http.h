@@ -7,7 +7,7 @@
 //
 // CREATED:         08/22/2022
 //
-// LAST EDITED:     09/04/2022
+// LAST EDITED:     09/05/2022
 //
 // Copyright 2022, Ethan D. Twardy
 //
@@ -38,6 +38,7 @@
 #include <llhttp.h>
 #include <uv.h>
 #include <libreidp/core/http.h>
+#include <libreidp/vector.h>
 
 ///////////////////////////////////////////////////////////////////////////////
 // Request
@@ -48,10 +49,12 @@ typedef struct IdpHttpHeader {
     char* value;
 } IdpHttpHeader;
 
+void idp_http_header_free(IdpHttpHeader* header);
+
 typedef struct IdpHttpRequest {
     IdpHttpRequestType request_type;
     char* path;
-    IdpHttpHeader* headers;
+    IdpVector* headers;
     char* body;
     size_t body_length;
 } IdpHttpRequest;
@@ -65,9 +68,7 @@ void idp_http_request_free(IdpHttpRequest* request);
 
 typedef struct IdpHttpResponse {
     IdpHttpResponseCode code;
-    IdpHttpHeader* headers;
-    size_t headers_length;
-    size_t headers_capacity;
+    IdpVector* headers;
     char* body;
     size_t body_length;
 } IdpHttpResponse;
@@ -92,6 +93,8 @@ typedef struct IdpHttpRoute {
     void* handler_data;
 } IdpHttpRoute;
 
+void idp_http_route_free(IdpHttpRoute* route);
+
 typedef struct IdpHttpCore {
     struct sockaddr_in address;
     int port;
@@ -105,9 +108,7 @@ typedef struct IdpHttpCore {
     llhttp_settings_t parser_settings;
 
     // Route handlers
-    IdpHttpRoute* routes;
-    size_t routes_length;
-    size_t routes_capacity;
+    IdpVector* routes;
 } IdpHttpCore;
 
 // Initialize an HTTP core
