@@ -78,9 +78,15 @@ typedef struct IdpHttpResponse {
 ////
 
 typedef struct IdpHttpContext {
+    uv_tcp_t client;
+    llhttp_t parser;
+    IdpHttpCore* core;
+    IdpHttpRequest* request;
     IdpHttpResponse* response;
     IdpHttpResponseOwnership ownership;
 } IdpHttpContext;
+
+void idp_http_context_free(IdpHttpContext* context);
 
 ///////////////////////////////////////////////////////////////////////////////
 // Core
@@ -96,6 +102,7 @@ typedef struct IdpHttpRoute {
 void idp_http_route_free(IdpHttpRoute* route);
 
 typedef struct IdpHttpCore {
+    // Socket state
     struct sockaddr_in address;
     int port;
 
@@ -104,11 +111,10 @@ typedef struct IdpHttpCore {
     uv_loop_t* loop;
 
     // llhttp state
-    llhttp_t http_parser;
     llhttp_settings_t parser_settings;
 
-    // Route handlers
-    IdpVector* routes;
+    IdpVector* routes; // Route handlers
+    IdpVector* connections; // Active connections
 } IdpHttpCore;
 
 // Initialize an HTTP core

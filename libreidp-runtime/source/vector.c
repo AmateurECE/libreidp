@@ -118,6 +118,9 @@ void idp_vector_remove(IdpVector* vector, size_t index) {
     --vector->length;
 }
 
+size_t idp_vector_length(IdpVector* vector)
+{ return vector->length; }
+
 ///////////////////////////////////////////////////////////////////////////////
 // Iterator
 ////

@@ -59,6 +59,26 @@ static IdpHttpCoreResult idp_http_core_result_error_from_libuv(
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+// Message Parsing
+////
+
+static int idp_http_core_on_url(llhttp_t* parser, const char* data,
+    size_t length)
+{}
+
+static int idp_http_core_on_header_field(llhttp_t* parser, const char* data,
+    size_t length)
+{}
+
+static int idp_http_core_on_header_value(llhttp_t* parser, const char* data,
+    size_t length)
+{}
+
+static int idp_http_core_on_body(llhttp_t* parser, const char* data,
+    size_t length)
+{}
+
+///////////////////////////////////////////////////////////////////////////////
 // Message Handling
 ////
 
@@ -138,13 +158,12 @@ static int idp_http_core_on_message_complete(llhttp_t* parser) {
     }
     memset(response_stream, 0, sizeof(*response_stream));
 
-    uv_stream_t* client = parser->data;
-    IdpHttpCore* core = client->data;
+    IdpHttpContext* context = parser->data;
     IdpHttpRequestCompletionResult response = idp_http_core_complete_request(
-        core, NULL);
+        context->core, context->request);
     if (response.ok && !response.empty) {
-        uv_write(response_stream, client, &response.buffer, 1,
-            idp_http_core_connection_write);
+        uv_write(response_stream, (uv_stream_t*)&context->client,
+            &response.buffer, 1, idp_http_core_connection_write);
     }
 
     return HPE_OK;
@@ -168,9 +187,8 @@ static void idp_http_core_connection_read(uv_stream_t* client, ssize_t nread,
             uv_close((uv_handle_t*)client, NULL);
         }
     } else if (nread > 0) {
-        IdpHttpCore* core = client->data;
-        core->http_parser.data = client;
-        int result = llhttp_execute(&core->http_parser, buf->base, nread);
+        IdpHttpContext* context = client->data;
+        int result = llhttp_execute(&context->parser, buf->base, nread);
         if (HPE_OK != result) {
             fprintf(stderr, "Invalid request received\n");
             uv_close((uv_handle_t*)client, NULL);
@@ -188,19 +206,33 @@ static void idp_http_core_on_new_connection(uv_stream_t* server, int status) {
         return;
     }
 
-    uv_tcp_t* client = malloc(sizeof(uv_tcp_t));
     IdpHttpCore* core = server->data;
-    client->data = core;
-    uv_tcp_init(core->loop, client);
-    if (0 == uv_accept(server, (uv_stream_t*)client)) {
-        uv_read_start((uv_stream_t*)client, idp_http_core_allocate_buffer,
-            idp_http_core_connection_read);
+    IdpHttpContext* context = idp_vector_reserve(core->connections);
+    uv_tcp_init(core->loop, &context->client);
+    if (0 == uv_accept(server, (uv_stream_t*)&context->client)) {
+        llhttp_init(&context->parser, HTTP_BOTH, &core->parser_settings);
+        context->parser.data = context;
+        context->core = core;
+        context->request = idp_http_request_new();
+        context->client.data = context;
+
+        uv_read_start((uv_stream_t*)&context->client,
+            idp_http_core_allocate_buffer, idp_http_core_connection_read);
+    } else {
+        idp_vector_remove(core->connections,
+            idp_vector_length(core->connections) - 1);
     }
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 // Public API
 ////
+
+void idp_http_context_free(IdpHttpContext* context) {
+    if (IDP_HTTP_RESPONSE_OWNING == context->ownership) {
+        idp_http_response_free(context->response);
+    }
+}
 
 IdpHttpCore* idp_http_core_new() {
     IdpHttpCore* core = malloc(sizeof(IdpHttpCore));
@@ -214,10 +246,15 @@ IdpHttpCore* idp_http_core_new() {
     llhttp_settings_init(&core->parser_settings);
     core->parser_settings.on_message_complete =
         idp_http_core_on_message_complete;
-    llhttp_init(&core->http_parser, HTTP_BOTH, &core->parser_settings);
+    core->parser_settings.on_url = idp_http_core_on_url;
+    core->parser_settings.on_header_field = idp_http_core_on_header_field;
+    core->parser_settings.on_header_value = idp_http_core_on_header_value;
+    core->parser_settings.on_body = idp_http_core_on_body;
 
     core->routes = idp_vector_new(sizeof(IdpHttpRoute),
         (IdpVectorFreeFn*)idp_http_route_free);
+    core->connections = idp_vector_new(sizeof(IdpHttpContext),
+        (IdpVectorFreeFn*)idp_http_context_free);
     return core;
 }
 
@@ -226,8 +263,9 @@ void idp_http_core_add_port(IdpHttpCore* core, int port) {
 }
 
 void idp_http_core_shutdown(IdpHttpCore* core) {
-    llhttp_reset(&core->http_parser);
     // TODO: Check if uv handle is active here?
+    idp_vector_free(core->routes);
+    idp_vector_free(core->connections);
     free(core);
 }
 

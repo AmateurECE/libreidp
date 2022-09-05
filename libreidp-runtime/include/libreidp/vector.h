@@ -41,6 +41,7 @@ void idp_vector_free(IdpVector* vector);
 
 void* idp_vector_reserve(IdpVector* vector);
 void idp_vector_remove(IdpVector* vector, size_t index);
+size_t idp_vector_length(IdpVector* vector);
 
 typedef struct IdpVectorIter {
     IdpVector* vector;
