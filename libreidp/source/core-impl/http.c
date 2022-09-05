@@ -59,6 +59,17 @@ static IdpHttpCoreResult idp_http_core_result_error_from_libuv(
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+// Routing
+////
+
+static void idp_http_core_route_request(IdpHttpCore* core,
+    IdpHttpContext* context, IdpHttpRequest* request)
+{
+    IdpHttpResponse* response = idp_http_response_new(IDP_HTTP_404_NOT_FOUND);
+    idp_http_context_set_response(context, response, IDP_HTTP_RESPONSE_OWNING);
+}
+
+///////////////////////////////////////////////////////////////////////////////
 // Connection Handling
 ////
 
@@ -78,12 +89,24 @@ static int idp_http_core_on_message_complete(llhttp_t* parser) {
     }
     memset(response_stream, 0, sizeof(*response_stream));
 
-    IdpHttpResponse* response = idp_http_response_new(IDP_HTTP_404_NOT_FOUND);
-    const size_t length = idp_http_response_get_string_length(response);
-    char* response_string = idp_http_response_to_string(response);
-    idp_http_response_free(response);
-
     uv_stream_t* client = parser->data;
+    IdpHttpCore* core = client->data;
+
+    // Route the request to the handler
+    IdpHttpContext context = {0};
+    idp_http_core_route_request(core, &context, NULL);
+    if (NULL == context.response) {
+        return HPE_OK;
+    }
+
+    // Serialize the response object
+    size_t length = idp_http_response_get_string_length(context.response);
+    char* response_string = idp_http_response_to_string(context.response);
+    if (IDP_HTTP_RESPONSE_OWNING == context.ownership) {
+        idp_http_response_free(context.response);
+    }
+
+    // Write the response to the client
     uv_buf_t response_buffer = uv_buf_init(response_string, length);
     uv_write(response_stream, client, &response_buffer, 1,
         idp_http_core_connection_write);
@@ -190,7 +213,7 @@ IdpHttpCoreResult idp_http_core_register(IdpHttpCore* core, uv_loop_t* loop) {
     uv_tcp_bind(&core->server, (const struct sockaddr*)&core->address, 0);
 
     int result = uv_listen((uv_stream_t*)&core->server, DEFAULT_BACKLOG,
-        on_new_connection);
+        idp_http_core_on_new_connection);
     if (0 != result) {
         return idp_http_core_result_error_from_libuv(
             IDP_HTTP_CORE_LISTEN_ERROR, result);

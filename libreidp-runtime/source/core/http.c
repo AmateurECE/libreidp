@@ -206,12 +206,6 @@ char* idp_http_response_to_string(IdpHttpResponse* response) {
 // Context
 ////
 
-// This object holds state for each request while the request is executing.
-typedef struct IdpHttpContext {
-    IdpHttpResponse* response;
-    IdpHttpResponseOwnership ownership;
-} IdpHttpContext;
-
 // Tell the HTTP core whether it's responsible for free(3)'ing the response.
 void idp_http_context_set_response(IdpHttpContext* context,
     IdpHttpResponse* response, IdpHttpResponseOwnership ownership)
