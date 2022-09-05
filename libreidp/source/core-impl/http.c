@@ -40,17 +40,29 @@ static const int DEFAULT_BACKLOG = 10;
 static const char* DEFAULT_LISTEN_ADDRESS = "0.0.0.0";
 
 ///////////////////////////////////////////////////////////////////////////////
-// Private API
+// Helpers
 ////
 
-static void alloc_buffer(uv_handle_t* handle __attribute__((unused)),
-    size_t suggested_size, uv_buf_t* buf)
+static IdpHttpCoreResult idp_http_core_result_error_from_libuv(
+    IdpHttpCoreError error, int status)
 {
-    buf->base = malloc(suggested_size);
-    buf->len = suggested_size;
+    return (IdpHttpCoreResult){
+        .ok = false,
+        .error = {
+            .owned = true,
+            .error = error,
+            .message = {
+                .owned = strdup(uv_strerror(status)),
+            },
+        },
+    };
 }
 
-static void echo_write(uv_write_t* req, int status) {
+///////////////////////////////////////////////////////////////////////////////
+// Connection Handling
+////
+
+static void idp_http_core_connection_write(uv_write_t* req, int status) {
     if (status) {
         fprintf(stderr, "Write error %s\n", uv_strerror(status));
     }
@@ -58,7 +70,38 @@ static void echo_write(uv_write_t* req, int status) {
     free(req);
 }
 
-static void echo_read(uv_stream_t* client, ssize_t nread, const uv_buf_t* buf)
+static int idp_http_core_on_message_complete(llhttp_t* parser) {
+    uv_write_t* response_stream = malloc(sizeof(uv_write_t));
+    if (NULL == response_stream) {
+        fprintf(stderr, "Couldn't allocate memory for write stream\n");
+        exit(1);
+    }
+    memset(response_stream, 0, sizeof(*response_stream));
+
+    IdpHttpResponse* response = idp_http_response_new(IDP_HTTP_404_NOT_FOUND);
+    const size_t length = idp_http_response_get_string_length(response);
+    char* response_string = idp_http_response_to_string(response);
+    idp_http_response_free(response);
+
+    uv_stream_t* client = parser->data;
+    uv_buf_t response_buffer = uv_buf_init(response_string, length);
+    uv_write(response_stream, client, &response_buffer, 1,
+        idp_http_core_connection_write);
+
+    return HPE_OK;
+}
+
+static void idp_http_core_allocate_buffer(
+    uv_handle_t* handle __attribute__((unused)),
+    size_t suggested_size,
+    uv_buf_t* buf)
+{
+    buf->base = malloc(suggested_size);
+    buf->len = suggested_size;
+}
+
+static void idp_http_core_connection_read(uv_stream_t* client, ssize_t nread,
+    const uv_buf_t* buf)
 {
     if (nread < 0) {
         if (nread != UV_EOF) {
@@ -80,7 +123,7 @@ static void echo_read(uv_stream_t* client, ssize_t nread, const uv_buf_t* buf)
     }
 }
 
-static void on_new_connection(uv_stream_t* server, int status) {
+static void idp_http_core_on_new_connection(uv_stream_t* server, int status) {
     if (status < 0) {
         fprintf(stderr, "New connection error %s\n", uv_strerror(status));
         return;
@@ -91,43 +134,9 @@ static void on_new_connection(uv_stream_t* server, int status) {
     client->data = core;
     uv_tcp_init(core->loop, client);
     if (0 == uv_accept(server, (uv_stream_t*)client)) {
-        uv_read_start((uv_stream_t*)client, alloc_buffer, echo_read);
+        uv_read_start((uv_stream_t*)client, idp_http_core_allocate_buffer,
+            idp_http_core_connection_read);
     }
-}
-
-static IdpHttpCoreResult idp_http_core_result_error_from_libuv(
-    IdpHttpCoreError error, int status)
-{
-    return (IdpHttpCoreResult){
-        .ok = false,
-        .error = {
-            .owned = true,
-            .error = error,
-            .message = {
-                .owned = strdup(uv_strerror(status)),
-            },
-        },
-    };
-}
-
-static int idp_http_core_on_message_complete(llhttp_t* parser) {
-    uv_write_t* response_stream = malloc(sizeof(uv_write_t));
-    if (NULL == response_stream) {
-        fprintf(stderr, "Couldn't allocate memory for write stream\n");
-        exit(1);
-    }
-    memset(response_stream, 0, sizeof(*response_stream));
-
-    IdpHttpResponse* response = idp_http_response_new(IDP_HTTP_404_NOT_FOUND);
-    const size_t length = idp_http_response_get_string_length(response);
-    char* response_string = idp_http_response_to_string(response);
-    idp_http_response_free(response);
-
-    uv_stream_t* client = parser->data;
-    uv_buf_t response_buffer = uv_buf_init(response_string, length);
-    uv_write(response_stream, client, &response_buffer, 1, echo_write);
-
-    return HPE_OK;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
