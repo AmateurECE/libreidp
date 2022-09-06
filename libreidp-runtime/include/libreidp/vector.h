@@ -33,6 +33,8 @@
 #ifndef IDP_VECTOR_H
 #define IDP_VECTOR_H
 
+#include <stddef.h>
+
 typedef struct IdpVector IdpVector;
 typedef void IdpVectorFreeFn(void*);
 

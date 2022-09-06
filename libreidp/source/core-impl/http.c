@@ -145,15 +145,16 @@ static IdpHttpRequestCompletionResult idp_http_core_complete_request(
 {
     IdpHttpCoreResult result = idp_http_core_route_request(context);
     const char* response_summary = NULL;
+    bool finished = false;
     if (!result.ok) {
         fprintf(stderr, "ERROR: %s\n", result.error.message.borrowed);
         if (result.error.owned) {
             free(result.error.message.owned);
         }
-        return (IdpHttpRequestCompletionResult){.ok = true, .empty = true};
+        finished = true;
     } else if (NULL == context->response) {
         response_summary = "No Response";
-        return (IdpHttpRequestCompletionResult){.ok = true, .empty = true};
+        finished = true;
     } else {
         response_summary = idp_http_response_code_to_str(
             context->response->code);
@@ -161,6 +162,10 @@ static IdpHttpRequestCompletionResult idp_http_core_complete_request(
 
     fprintf(stderr, "\"%s\" => %s\n", context->request->path,
         response_summary);
+
+    if (finished) {
+        return (IdpHttpRequestCompletionResult){.ok = true, .empty = true};
+    }
 
     // Serialize the response object
     size_t length = idp_http_response_get_string_length(context->response);
