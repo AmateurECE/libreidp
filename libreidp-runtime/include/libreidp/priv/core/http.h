@@ -99,8 +99,6 @@ typedef struct IdpHttpRoute {
     void* handler_data;
 } IdpHttpRoute;
 
-void idp_http_route_free(IdpHttpRoute* route);
-
 typedef struct IdpHttpCore {
     // Socket state
     struct sockaddr_in address;

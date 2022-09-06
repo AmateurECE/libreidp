@@ -64,37 +64,68 @@ static IdpHttpCoreResult idp_http_core_result_error_from_libuv(
 
 static int idp_http_core_on_url(llhttp_t* parser, const char* data,
     size_t length)
-{}
+{
+    IdpHttpContext* context = parser->data;
+    IdpHttpRequest* request = context->request;
+    request->path = malloc(length + 1);
+    memset(request->path, 0, length + 1);
+    strncpy(request->path, data, length);
+    return HPE_OK;
+}
 
 static int idp_http_core_on_header_field(llhttp_t* parser, const char* data,
     size_t length)
-{}
+{
+    IdpHttpContext* context = parser->data;
+    IdpHttpRequest* request = context->request;
+    IdpHttpHeader* header = idp_vector_reserve(request->headers);
+    header->name = malloc(length + 1);
+    memset(header->name, 0, length + 1);
+    strncpy(header->name, data, length);
+    return HPE_OK;
+}
 
 static int idp_http_core_on_header_value(llhttp_t* parser, const char* data,
     size_t length)
-{}
+{
+    IdpHttpContext* context = parser->data;
+    IdpHttpRequest* request = context->request;
+    IdpHttpHeader* header = idp_vector_get(request->headers,
+        idp_vector_length(request->headers) - 1);
+    header->value = malloc(length + 1);
+    memset(header->value, 0, length + 1);
+    strncpy(header->value, data, length);
+    return HPE_OK;
+}
 
 static int idp_http_core_on_body(llhttp_t* parser, const char* data,
     size_t length)
-{}
+{
+    IdpHttpContext* context = parser->data;
+    IdpHttpRequest* request = context->request;
+    request->body_length = length;
+    request->body = malloc(length);
+    memcpy(request->body, data, length);
+    return HPE_OK;
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 // Message Handling
 ////
 
-static IdpHttpCoreResult idp_http_core_route_request(IdpHttpCore* core,
-    IdpHttpContext* context, IdpHttpRequest* request)
-{
-    const char* path = idp_http_request_get_path(request);
-    IdpHttpRequestType request_type = idp_http_request_get_type(request);
+static IdpHttpCoreResult idp_http_core_route_request(IdpHttpContext* context) {
+    const char* path = idp_http_request_get_path(context->request);
+    IdpHttpRequestType request_type = idp_http_request_get_type(
+        context->request);
 
     IdpVectorIter iterator = {0};
     IdpHttpRoute* route = NULL;
-    idp_vector_iter_init(&iterator, core->routes);
+    idp_vector_iter_init(&iterator, context->core->routes);
     while (NULL != (route = idp_vector_iter_next(&iterator))) {
         if (!strcmp(path, route->path) && request_type == route->request_type)
         {
-            return route->handler(request, context, route->handler_data);
+            return route->handler(context->request, context,
+                route->handler_data);
         }
     }
 
@@ -110,26 +141,32 @@ typedef struct IdpHttpRequestCompletionResult {
 } IdpHttpRequestCompletionResult;
 
 static IdpHttpRequestCompletionResult idp_http_core_complete_request(
-    IdpHttpCore* core, IdpHttpRequest* request)
+    IdpHttpContext* context)
 {
-    IdpHttpContext context = {0};
-    IdpHttpCoreResult result = idp_http_core_route_request(core, &context,
-        request);
+    IdpHttpCoreResult result = idp_http_core_route_request(context);
+    const char* response_summary = NULL;
     if (!result.ok) {
         fprintf(stderr, "ERROR: %s\n", result.error.message.borrowed);
         if (result.error.owned) {
             free(result.error.message.owned);
         }
         return (IdpHttpRequestCompletionResult){.ok = true, .empty = true};
-    } else if (NULL == context.response) {
+    } else if (NULL == context->response) {
+        response_summary = "No Response";
         return (IdpHttpRequestCompletionResult){.ok = true, .empty = true};
+    } else {
+        response_summary = idp_http_response_code_to_str(
+            context->response->code);
     }
 
+    fprintf(stderr, "\"%s\" => %s\n", context->request->path,
+        response_summary);
+
     // Serialize the response object
-    size_t length = idp_http_response_get_string_length(context.response);
-    char* response_string = idp_http_response_to_string(context.response);
-    if (IDP_HTTP_RESPONSE_OWNING == context.ownership) {
-        idp_http_response_free(context.response);
+    size_t length = idp_http_response_get_string_length(context->response);
+    char* response_string = idp_http_response_to_string(context->response);
+    if (IDP_HTTP_RESPONSE_OWNING == context->ownership) {
+        idp_http_response_free(context->response);
     }
 
     return (IdpHttpRequestCompletionResult){
@@ -159,8 +196,8 @@ static int idp_http_core_on_message_complete(llhttp_t* parser) {
     memset(response_stream, 0, sizeof(*response_stream));
 
     IdpHttpContext* context = parser->data;
-    IdpHttpRequestCompletionResult response = idp_http_core_complete_request(
-        context->core, context->request);
+    IdpHttpRequestCompletionResult response =
+        idp_http_core_complete_request(context);
     if (response.ok && !response.empty) {
         uv_write(response_stream, (uv_stream_t*)&context->client,
             &response.buffer, 1, idp_http_core_connection_write);
@@ -251,8 +288,7 @@ IdpHttpCore* idp_http_core_new() {
     core->parser_settings.on_header_value = idp_http_core_on_header_value;
     core->parser_settings.on_body = idp_http_core_on_body;
 
-    core->routes = idp_vector_new(sizeof(IdpHttpRoute),
-        (IdpVectorFreeFn*)idp_http_route_free);
+    core->routes = idp_vector_new(sizeof(IdpHttpRoute), NULL);
     core->connections = idp_vector_new(sizeof(IdpHttpContext),
         (IdpVectorFreeFn*)idp_http_context_free);
     return core;

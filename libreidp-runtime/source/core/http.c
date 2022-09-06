@@ -212,9 +212,6 @@ void idp_http_context_set_response(IdpHttpContext* context,
 // Core
 ////
 
-void idp_http_route_free(IdpHttpRoute* route)
-{ free(route->path); }
-
 IdpHttpCoreResult idp_http_core_add_route(IdpHttpCore* core,
     IdpHttpRequestType request_type, char* path,
     IdpHttpHandlerCallback* handler, void* handler_state)

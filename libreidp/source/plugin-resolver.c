@@ -109,6 +109,9 @@ static char* get_plugin_path_for_name_in_dir(const char* directory_path,
     return result;
 }
 
+static void string_free(char** string)
+{ free(*string); }
+
 ///////////////////////////////////////////////////////////////////////////////
 // Public API
 ////
@@ -121,7 +124,8 @@ IdpPluginResolver* idp_plugin_resolver_new() {
     }
 
     memset(resolver, 0, sizeof(*resolver));
-    resolver->directories = idp_vector_new(sizeof(char*), free);
+    resolver->directories = idp_vector_new(sizeof(char*),
+        (IdpVectorFreeFn*)string_free);
     return resolver;
 }
 

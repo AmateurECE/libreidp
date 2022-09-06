@@ -7,7 +7,7 @@
 //
 // CREATED:         08/17/2022
 //
-// LAST EDITED:     09/04/2022
+// LAST EDITED:     09/05/2022
 //
 // Copyright 2022, Ethan D. Twardy
 //
@@ -37,8 +37,7 @@
 IdpHttpCoreResult root(IdpHttpRequest* request, IdpHttpContext* context,
     void* data)
 {
-    printf("\"/\" => 200 OK");
-    IdpHttpResponse* response = idp_http_response_new(IDP_HTTP_200_OK);
+    IdpHttpResponse* response = idp_http_response_new(IDP_HTTP_404_NOT_FOUND);
     idp_http_context_set_response(context, response, IDP_HTTP_RESPONSE_OWNING);
     return (IdpHttpCoreResult){.ok = true};
 }

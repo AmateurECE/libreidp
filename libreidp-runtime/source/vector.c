@@ -37,7 +37,7 @@
 #include <libreidp/vector.h>
 
 typedef struct IdpVector {
-    int* data;
+    char* data;
     size_t length;
     size_t capacity;
     size_t member_size;
@@ -98,8 +98,7 @@ void* idp_vector_reserve(IdpVector* vector) {
         vector->capacity = capacity;
     }
 
-    ++vector->length;
-    return vector->data + (vector->length * vector->member_size);
+    return idp_vector_get(vector, vector->length++);
 }
 
 void idp_vector_remove(IdpVector* vector, size_t index) {
@@ -121,6 +120,15 @@ void idp_vector_remove(IdpVector* vector, size_t index) {
 size_t idp_vector_length(IdpVector* vector)
 { return vector->length; }
 
+void* idp_vector_get(IdpVector* vector, size_t index)
+{
+    if (index >= vector->length) {
+        return NULL;
+    }
+
+    return vector->data + (index * vector->member_size);
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // Iterator
 ////
@@ -130,8 +138,7 @@ void idp_vector_iter_init(IdpVectorIter* iter, IdpVector* vector) {
     iter->index = 0;
 }
 
-void* idp_vector_iter_next(IdpVectorIter* iter) {
-    return iter->vector->data + (iter->index++ * iter->vector->member_size);
-}
+void* idp_vector_iter_next(IdpVectorIter* iter)
+{ return idp_vector_get(iter->vector, iter->index++); }
 
 ///////////////////////////////////////////////////////////////////////////////
