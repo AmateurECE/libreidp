@@ -38,9 +38,12 @@
 
 const char* idp_plugin_interface_to_str(IdpPluginInterface interface) {
     switch (interface) {
-    case IDP_PLUGIN_NONE: return "none";
-    case IDP_PLUGIN_HTTP: return "http";
-    default: return "unknown";
+    case IDP_PLUGIN_NONE:
+        return "none";
+    case IDP_PLUGIN_HTTP:
+        return "http";
+    default:
+        return "unknown";
     }
 }
 

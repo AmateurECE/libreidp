@@ -52,13 +52,14 @@ static IdpPlugin** idp_load_plugins(const IdpConfig* config) {
     IdpPluginResolver* resolver = idp_plugin_resolver_new();
     for (size_t i = 0; NULL != config->plugin_load_directories[i]; ++i) {
         printf("Plugin directory: %s\n", config->plugin_load_directories[i]);
-        idp_plugin_resolver_add_directory(resolver,
-            strdup(config->plugin_load_directories[i]));
+        idp_plugin_resolver_add_directory(
+            resolver, strdup(config->plugin_load_directories[i]));
     }
 
     // Prepare a list for the loaded plugins
     size_t number_plugins = 0;
-    for (; NULL != config->plugins[number_plugins]; ++number_plugins);
+    for (; NULL != config->plugins[number_plugins]; ++number_plugins)
+        ;
     number_plugins += 1; // for NULL sentinel
 
     IdpPlugin** loaded_plugins = malloc(number_plugins * sizeof(IdpPlugin*));
@@ -71,19 +72,20 @@ static IdpPlugin** idp_load_plugins(const IdpConfig* config) {
 
     // Resolve any requested plugins to a filesystem path
     for (size_t i = 0; NULL != config->plugins[i]; ++i) {
-        char* plugin_path = idp_plugin_resolver_get_plugin_path(resolver,
-            config->plugins[i]);
+        char* plugin_path =
+            idp_plugin_resolver_get_plugin_path(resolver, config->plugins[i]);
         if (NULL == plugin_path) {
             fprintf(stderr, "Unable to locate plugin \"%s\"\n",
-                config->plugins[i]);
+                    config->plugins[i]);
         } else {
             printf("Discovered plugin %s...", plugin_path);
             IdpPlugin* loaded_plugin = idp_plugin_load(plugin_path);
             if (NULL == loaded_plugin) {
                 printf("failed to load\n");
             } else {
-                printf("interface: %s\n", idp_plugin_interface_to_str(
-                        idp_plugin_get_interface(loaded_plugin)));
+                printf("interface: %s\n",
+                       idp_plugin_interface_to_str(
+                           idp_plugin_get_interface(loaded_plugin)));
             }
 
             loaded_plugins[number_loaded_plugins++] = loaded_plugin;
@@ -107,19 +109,23 @@ static void idp_remove_plugins(IdpPlugin** loaded_plugins) {
 ////
 
 typedef struct IdpCoresEnabled {
-    struct { bool enabled; IdpHttpCore* core; } http;
+    struct {
+        bool enabled;
+        IdpHttpCore* core;
+    } http;
 } IdpCoresEnabled;
 
 static IdpCoresEnabled idp_get_requested_cores(IdpPlugin** plugins) {
     IdpCoresEnabled cores_enabled = {0};
 
     for (size_t i = 0; NULL != plugins[i]; ++i) {
-        switch(idp_plugin_get_interface(plugins[i])) {
+        switch (idp_plugin_get_interface(plugins[i])) {
         case IDP_PLUGIN_HTTP:
             printf("Enabling HTTP core\n");
             cores_enabled.http.enabled = true;
             break;
-        default: break;
+        default:
+            break;
         }
     }
 
@@ -131,13 +137,12 @@ static IdpCoresEnabled idp_get_requested_cores(IdpPlugin** plugins) {
 ////
 
 static void idp_setup_cores(IdpCoresEnabled* cores_enabled, uv_loop_t* loop,
-    const IdpConfig* config)
-{
+                            const IdpConfig* config) {
     // Setup cores
     if (cores_enabled->http.enabled) {
         cores_enabled->http.core = idp_http_core_new();
         idp_http_core_add_port(cores_enabled->http.core,
-            config->http.default_port);
+                               config->http.default_port);
     }
 
     // Register application core objects with libuv event loop
@@ -157,18 +162,17 @@ static void idp_shutdown_cores(IdpCoresEnabled* cores_enabled) {
 ////
 
 static void idp_initialize_http_interface(IdpCoresEnabled* cores_enabled,
-    IdpPlugin* plugin)
-{
+                                          IdpPlugin* plugin) {
     IdpHttpInterface* http = idp_plugin_get_http_interface(plugin);
     if (!cores_enabled->http.enabled) {
         fprintf(stderr, "Error: A plugin has requested a core that has not"
-            " been enabled.\n");
+                        " been enabled.\n");
         return;
     }
 
     if (NULL == http) {
         fprintf(stderr, "Error: A plugin is erroneously reporting to support"
-            " an interface that it does not.\n");
+                        " an interface that it does not.\n");
         return;
     }
 
@@ -176,8 +180,7 @@ static void idp_initialize_http_interface(IdpCoresEnabled* cores_enabled,
 }
 
 static void idp_initialize_plugin_interfaces(IdpCoresEnabled* cores_enabled,
-    IdpPlugin** loaded_plugins)
-{
+                                             IdpPlugin** loaded_plugins) {
     for (size_t i = 0; NULL != loaded_plugins[i]; ++i) {
         IdpPlugin* plugin = loaded_plugins[i];
         IdpPluginInterface interface_type = idp_plugin_get_interface(plugin);
@@ -204,16 +207,23 @@ void idp_handle_sigint(uv_signal_t* handle, int signum) {
 
 int main() {
     // Static configuration (for now).
-    char* plugins[] = { "oauth2", NULL, };
-    char* plugin_load_directories[] = { "plugins/oauth2", NULL, };
+    char* plugins[] = {
+        "oauth2",
+        NULL,
+    };
+    char* plugin_load_directories[] = {
+        "plugins/oauth2",
+        NULL,
+    };
     const IdpConfig config = {
         .auth_form_path = "/auth",
         .auth_form_uri = "", // Authentication form resides on our server
         .plugins = plugins,
         .plugin_load_directories = plugin_load_directories,
-        .http = {
-            .default_port = 3000,
-        },
+        .http =
+            {
+                .default_port = 3000,
+            },
     };
 
     uv_loop_t* loop = uv_default_loop();

@@ -30,20 +30,20 @@
 // IN THE SOFTWARE.
 ////
 
+#include <libreidp/priv/core/http.h>
 #include <stdlib.h>
 #include <string.h>
-#include <libreidp/priv/core/http.h>
 
 ///////////////////////////////////////////////////////////////////////////////
 // Request
 ////
 
-const char* idp_http_request_get_path(IdpHttpRequest* request)
-{ return request->path; }
+const char* idp_http_request_get_path(IdpHttpRequest* request) {
+    return request->path;
+}
 
 const char* idp_http_request_get_header(IdpHttpRequest* request,
-    const char* name)
-{
+                                        const char* name) {
     IdpVectorIter iterator = {0};
     IdpHttpHeader* header = NULL;
     idp_vector_iter_init(&iterator, request->headers);
@@ -56,14 +56,17 @@ const char* idp_http_request_get_header(IdpHttpRequest* request,
     return NULL;
 }
 
-IdpHttpRequestType idp_http_request_get_type(IdpHttpRequest* request)
-{ return request->request_type; }
+IdpHttpRequestType idp_http_request_get_type(IdpHttpRequest* request) {
+    return request->request_type;
+}
 
-const char* idp_http_request_get_body(IdpHttpRequest* request)
-{ return request->body; }
+const char* idp_http_request_get_body(IdpHttpRequest* request) {
+    return request->body;
+}
 
-size_t idp_http_request_get_body_length(IdpHttpRequest* request)
-{ return request->body_length; }
+size_t idp_http_request_get_body_length(IdpHttpRequest* request) {
+    return request->body_length;
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 // Response
@@ -73,9 +76,12 @@ static const char* HTTP_VERSION = "HTTP/1.1";
 
 const char* idp_http_response_code_to_str(IdpHttpResponseCode code) {
     switch (code) {
-    case IDP_HTTP_200_OK: return "200 OK";
-    case IDP_HTTP_404_NOT_FOUND: return "404 Not Found";
-    default: return "unknown";
+    case IDP_HTTP_200_OK:
+        return "200 OK";
+    case IDP_HTTP_404_NOT_FOUND:
+        return "404 Not Found";
+    default:
+        return "unknown";
     }
 }
 
@@ -88,15 +94,15 @@ IdpHttpResponse* idp_http_response_new(IdpHttpResponseCode code) {
 
     memset(response, 0, sizeof(IdpHttpResponse));
     response->headers = idp_vector_new(sizeof(IdpHttpHeader),
-        (IdpVectorFreeFn*)idp_http_header_free);
+                                       (IdpVectorFreeFn*)idp_http_header_free);
 
     response->code = code;
     idp_http_response_set_header(response, strdup("Server"),
-        strdup("libreidp"));
+                                 strdup("libreidp"));
     idp_http_response_set_header(response, strdup("Content-Length"),
-        strdup("0"));
+                                 strdup("0"));
     idp_http_response_set_header(response, strdup("Connection"),
-        strdup("close"));
+                                 strdup("close"));
 
     return response;
 }
@@ -113,16 +119,14 @@ void idp_http_response_free(IdpHttpResponse* response) {
 }
 
 void idp_http_response_set_header(IdpHttpResponse* response, char* name,
-    char* value)
-{
+                                  char* value) {
     IdpHttpHeader* header = idp_vector_reserve(response->headers);
     header->name = name;
     header->value = value;
 }
 
 void idp_http_response_set_body(IdpHttpResponse* response, char* body,
-    size_t length)
-{
+                                size_t length) {
     response->body = body;
     response->body_length = length;
 
@@ -143,16 +147,16 @@ size_t idp_http_response_get_string_length(IdpHttpResponse* response) {
     const char* code_string = idp_http_response_code_to_str(response->code);
 
     // Summary
-    size_t total_length = strlen(HTTP_VERSION) + strlen(" ")
-        + strlen(code_string) + strlen("\r\n");
+    size_t total_length = strlen(HTTP_VERSION) + strlen(" ") +
+                          strlen(code_string) + strlen("\r\n");
 
     // Headers
     IdpVectorIter iterator = {0};
     IdpHttpHeader* header = NULL;
     idp_vector_iter_init(&iterator, response->headers);
     while (NULL != (header = idp_vector_iter_next(&iterator))) {
-        total_length += strlen(header->name) + strlen(": ")
-            + strlen(header->value) + strlen("\r\n");
+        total_length += strlen(header->name) + strlen(": ") +
+                        strlen(header->value) + strlen("\r\n");
     }
 
     // Body
@@ -186,12 +190,12 @@ char* idp_http_response_to_string(IdpHttpResponse* response) {
 
     strcat(response_string, "\r\n");
     if (0 != response->body_length) {
-        const size_t header_length = string_length - response->body_length
-            - strlen("\r\n");
+        const size_t header_length =
+            string_length - response->body_length - strlen("\r\n");
         memcpy(response_string + header_length, response->body,
-            response->body_length);
+               response->body_length);
         memcpy(response_string + header_length + response->body_length, "\r\n",
-            strlen("\r\n"));
+               strlen("\r\n"));
     }
     return response_string;
 }
@@ -202,8 +206,8 @@ char* idp_http_response_to_string(IdpHttpResponse* response) {
 
 // Tell the HTTP core whether it's responsible for free(3)'ing the response.
 void idp_http_context_set_response(IdpHttpContext* context,
-    IdpHttpResponse* response, IdpHttpResponseOwnership ownership)
-{
+                                   IdpHttpResponse* response,
+                                   IdpHttpResponseOwnership ownership) {
     context->response = response;
     context->ownership = ownership;
 }
@@ -213,9 +217,10 @@ void idp_http_context_set_response(IdpHttpContext* context,
 ////
 
 IdpHttpCoreResult idp_http_core_add_route(IdpHttpCore* core,
-    IdpHttpRequestType request_type, char* path,
-    IdpHttpHandlerCallback* handler, void* handler_state)
-{
+                                          IdpHttpRequestType request_type,
+                                          char* path,
+                                          IdpHttpHandlerCallback* handler,
+                                          void* handler_state) {
     IdpHttpRoute* route = idp_vector_reserve(core->routes);
     route->request_type = request_type;
     route->path = path;

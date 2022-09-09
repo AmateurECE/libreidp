@@ -30,11 +30,11 @@
 // IN THE SOFTWARE.
 ////
 
+#include <libreidp/priv/core/http.h>
+#include <llhttp.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <llhttp.h>
-#include <libreidp/priv/core/http.h>
 
 static const int DEFAULT_BACKLOG = 10;
 static const char* DEFAULT_LISTEN_ADDRESS = "0.0.0.0";
@@ -43,18 +43,19 @@ static const char* DEFAULT_LISTEN_ADDRESS = "0.0.0.0";
 // Helpers
 ////
 
-static IdpHttpCoreResult idp_http_core_result_error_from_libuv(
-    IdpHttpCoreError error, int status)
-{
+static IdpHttpCoreResult
+idp_http_core_result_error_from_libuv(IdpHttpCoreError error, int status) {
     return (IdpHttpCoreResult){
         .ok = false,
-        .error = {
-            .owned = true,
-            .error = error,
-            .message = {
-                .owned = strdup(uv_strerror(status)),
+        .error =
+            {
+                .owned = true,
+                .error = error,
+                .message =
+                    {
+                        .owned = strdup(uv_strerror(status)),
+                    },
             },
-        },
     };
 }
 
@@ -63,8 +64,7 @@ static IdpHttpCoreResult idp_http_core_result_error_from_libuv(
 ////
 
 static int idp_http_core_on_url(llhttp_t* parser, const char* data,
-    size_t length)
-{
+                                size_t length) {
     IdpHttpContext* context = parser->data;
     IdpHttpRequest* request = context->request;
     request->path = malloc(length + 1);
@@ -74,8 +74,7 @@ static int idp_http_core_on_url(llhttp_t* parser, const char* data,
 }
 
 static int idp_http_core_on_header_field(llhttp_t* parser, const char* data,
-    size_t length)
-{
+                                         size_t length) {
     IdpHttpContext* context = parser->data;
     IdpHttpRequest* request = context->request;
     IdpHttpHeader* header = idp_vector_reserve(request->headers);
@@ -86,12 +85,11 @@ static int idp_http_core_on_header_field(llhttp_t* parser, const char* data,
 }
 
 static int idp_http_core_on_header_value(llhttp_t* parser, const char* data,
-    size_t length)
-{
+                                         size_t length) {
     IdpHttpContext* context = parser->data;
     IdpHttpRequest* request = context->request;
-    IdpHttpHeader* header = idp_vector_get(request->headers,
-        idp_vector_length(request->headers) - 1);
+    IdpHttpHeader* header = idp_vector_get(
+        request->headers, idp_vector_length(request->headers) - 1);
     header->value = malloc(length + 1);
     memset(header->value, 0, length + 1);
     strncpy(header->value, data, length);
@@ -99,8 +97,7 @@ static int idp_http_core_on_header_value(llhttp_t* parser, const char* data,
 }
 
 static int idp_http_core_on_body(llhttp_t* parser, const char* data,
-    size_t length)
-{
+                                 size_t length) {
     IdpHttpContext* context = parser->data;
     IdpHttpRequest* request = context->request;
     request->body_length = length;
@@ -115,17 +112,17 @@ static int idp_http_core_on_body(llhttp_t* parser, const char* data,
 
 static IdpHttpCoreResult idp_http_core_route_request(IdpHttpContext* context) {
     const char* path = idp_http_request_get_path(context->request);
-    IdpHttpRequestType request_type = idp_http_request_get_type(
-        context->request);
+    IdpHttpRequestType request_type =
+        idp_http_request_get_type(context->request);
 
     IdpVectorIter iterator = {0};
     IdpHttpRoute* route = NULL;
     idp_vector_iter_init(&iterator, context->core->routes);
     while (NULL != (route = idp_vector_iter_next(&iterator))) {
-        if (!strcmp(path, route->path) && request_type == route->request_type)
-        {
+        if (!strcmp(path, route->path) &&
+            request_type == route->request_type) {
             return route->handler(context->request, context,
-                route->handler_data);
+                                  route->handler_data);
         }
     }
 
@@ -140,9 +137,8 @@ typedef struct IdpHttpRequestCompletionResult {
     uv_buf_t buffer;
 } IdpHttpRequestCompletionResult;
 
-static IdpHttpRequestCompletionResult idp_http_core_complete_request(
-    IdpHttpContext* context)
-{
+static IdpHttpRequestCompletionResult
+idp_http_core_complete_request(IdpHttpContext* context) {
     IdpHttpCoreResult result = idp_http_core_route_request(context);
     const char* response_summary = NULL;
     bool finished = false;
@@ -156,12 +152,12 @@ static IdpHttpRequestCompletionResult idp_http_core_complete_request(
         response_summary = "No Response";
         finished = true;
     } else {
-        response_summary = idp_http_response_code_to_str(
-            context->response->code);
+        response_summary =
+            idp_http_response_code_to_str(context->response->code);
     }
 
     fprintf(stderr, "\"%s\" => %s\n", context->request->path,
-        response_summary);
+            response_summary);
 
     if (finished) {
         return (IdpHttpRequestCompletionResult){.ok = true, .empty = true};
@@ -175,7 +171,8 @@ static IdpHttpRequestCompletionResult idp_http_core_complete_request(
     }
 
     return (IdpHttpRequestCompletionResult){
-        .ok = true, .empty = false,
+        .ok = true,
+        .empty = false,
         .buffer = uv_buf_init(response_string, length),
     };
 }
@@ -205,7 +202,7 @@ static int idp_http_core_on_message_complete(llhttp_t* parser) {
         idp_http_core_complete_request(context);
     if (response.ok && !response.empty) {
         uv_write(response_stream, (uv_stream_t*)&context->client,
-            &response.buffer, 1, idp_http_core_connection_write);
+                 &response.buffer, 1, idp_http_core_connection_write);
     } else {
         free(response_stream);
     }
@@ -213,18 +210,16 @@ static int idp_http_core_on_message_complete(llhttp_t* parser) {
     return HPE_OK;
 }
 
-static void idp_http_core_allocate_buffer(
-    uv_handle_t* handle __attribute__((unused)),
-    size_t suggested_size,
-    uv_buf_t* buf)
-{
+static void idp_http_core_allocate_buffer(uv_handle_t* handle
+                                          __attribute__((unused)),
+                                          size_t suggested_size,
+                                          uv_buf_t* buf) {
     buf->base = malloc(suggested_size);
     buf->len = suggested_size;
 }
 
 static void idp_http_core_connection_read(uv_stream_t* client, ssize_t nread,
-    const uv_buf_t* buf)
-{
+                                          const uv_buf_t* buf) {
     if (nread < 0) {
         if (nread != UV_EOF) {
             fprintf(stderr, "Read error %s\n", uv_err_name(nread));
@@ -261,10 +256,11 @@ static void idp_http_core_on_new_connection(uv_stream_t* server, int status) {
         context->client.data = context;
 
         uv_read_start((uv_stream_t*)&context->client,
-            idp_http_core_allocate_buffer, idp_http_core_connection_read);
+                      idp_http_core_allocate_buffer,
+                      idp_http_core_connection_read);
     } else {
         idp_vector_remove(core->connections,
-            idp_vector_length(core->connections) - 1);
+                          idp_vector_length(core->connections) - 1);
     }
 }
 
@@ -296,14 +292,12 @@ IdpHttpCore* idp_http_core_new() {
     core->parser_settings.on_body = idp_http_core_on_body;
 
     core->routes = idp_vector_new(sizeof(IdpHttpRoute), NULL);
-    core->connections = idp_vector_new(sizeof(IdpHttpContext),
-        (IdpVectorFreeFn*)idp_http_context_free);
+    core->connections = idp_vector_new(
+        sizeof(IdpHttpContext), (IdpVectorFreeFn*)idp_http_context_free);
     return core;
 }
 
-void idp_http_core_add_port(IdpHttpCore* core, int port) {
-    core->port = port;
-}
+void idp_http_core_add_port(IdpHttpCore* core, int port) { core->port = port; }
 
 void idp_http_core_shutdown(IdpHttpCore* core) {
     // TODO: Check if uv handle is active here?
@@ -322,7 +316,7 @@ IdpHttpCoreResult idp_http_core_register(IdpHttpCore* core, uv_loop_t* loop) {
     uv_tcp_bind(&core->server, (const struct sockaddr*)&core->address, 0);
 
     int result = uv_listen((uv_stream_t*)&core->server, DEFAULT_BACKLOG,
-        idp_http_core_on_new_connection);
+                           idp_http_core_on_new_connection);
     if (0 != result) {
         return idp_http_core_result_error_from_libuv(
             IDP_HTTP_CORE_LISTEN_ERROR, result);
@@ -344,7 +338,7 @@ IdpHttpRequest* idp_http_request_new() {
 
     memset(request, 0, sizeof(IdpHttpRequest));
     request->headers = idp_vector_new(sizeof(IdpHttpHeader),
-        (IdpVectorFreeFn*)idp_http_header_free);
+                                      (IdpVectorFreeFn*)idp_http_header_free);
     return request;
 }
 

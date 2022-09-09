@@ -33,12 +33,12 @@
 #ifndef IDP_CORE_IMPL_HTTP_H
 #define IDP_CORE_IMPL_HTTP_H
 
-#include <stdbool.h>
-#include <netinet/in.h>
-#include <llhttp.h>
-#include <uv.h>
 #include <libreidp/core/http.h>
 #include <libreidp/vector.h>
+#include <llhttp.h>
+#include <netinet/in.h>
+#include <stdbool.h>
+#include <uv.h>
 
 ///////////////////////////////////////////////////////////////////////////////
 // Request
@@ -111,7 +111,7 @@ typedef struct IdpHttpCore {
     // llhttp state
     llhttp_settings_t parser_settings;
 
-    IdpVector* routes; // Route handlers
+    IdpVector* routes;      // Route handlers
     IdpVector* connections; // Active connections
 } IdpHttpCore;
 

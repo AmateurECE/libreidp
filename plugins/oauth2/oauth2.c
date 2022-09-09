@@ -30,13 +30,12 @@
 // IN THE SOFTWARE.
 ////
 
+#include <libreidp/libreidp.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <libreidp/libreidp.h>
 
 IdpHttpCoreResult root(IdpHttpRequest* request, IdpHttpContext* context,
-    void* data)
-{
+                       void* data) {
     IdpHttpResponse* response = idp_http_response_new(IDP_HTTP_404_NOT_FOUND);
     idp_http_context_set_response(context, response, IDP_HTTP_RESPONSE_OWNING);
     return (IdpHttpCoreResult){.ok = true};
@@ -48,10 +47,11 @@ static IdpHttpCoreResult oauth2_register_endpoints(IdpHttpCore* core) {
 
 IdpPluginDefinition idp_plugin_definition = {
     .interface = IDP_PLUGIN_HTTP,
-    .http = {
-        .version = IDP_HTTP_INTERFACE_UNSTABLE,
-        .register_endpoints = oauth2_register_endpoints,
-    },
+    .http =
+        {
+            .version = IDP_HTTP_INTERFACE_UNSTABLE,
+            .register_endpoints = oauth2_register_endpoints,
+        },
 };
 
 ///////////////////////////////////////////////////////////////////////////////

@@ -30,11 +30,11 @@
 // IN THE SOFTWARE.
 ////
 
+#include <libreidp/vector.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <libreidp/vector.h>
 
 typedef struct IdpVector {
     char* data;
@@ -117,11 +117,9 @@ void idp_vector_remove(IdpVector* vector, size_t index) {
     --vector->length;
 }
 
-size_t idp_vector_length(IdpVector* vector)
-{ return vector->length; }
+size_t idp_vector_length(IdpVector* vector) { return vector->length; }
 
-void* idp_vector_get(IdpVector* vector, size_t index)
-{
+void* idp_vector_get(IdpVector* vector, size_t index) {
     if (index >= vector->length) {
         return NULL;
     }
@@ -138,7 +136,8 @@ void idp_vector_iter_init(IdpVectorIter* iter, IdpVector* vector) {
     iter->index = 0;
 }
 
-void* idp_vector_iter_next(IdpVectorIter* iter)
-{ return idp_vector_get(iter->vector, iter->index++); }
+void* idp_vector_iter_next(IdpVectorIter* iter) {
+    return idp_vector_get(iter->vector, iter->index++);
+}
 
 ///////////////////////////////////////////////////////////////////////////////

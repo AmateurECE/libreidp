@@ -39,9 +39,9 @@ IdpPluginResolver* idp_plugin_resolver_new();
 void idp_plugin_resolver_free(IdpPluginResolver* resolver);
 
 void idp_plugin_resolver_add_directory(IdpPluginResolver* resolver,
-    char* load_directory);
+                                       char* load_directory);
 char* idp_plugin_resolver_get_plugin_path(IdpPluginResolver* resolver,
-    const char* plugin_name);
+                                          const char* plugin_name);
 
 #endif // PLUGIN_RESOLVER_H
 

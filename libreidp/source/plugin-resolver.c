@@ -37,8 +37,8 @@
 #include <string.h>
 #include <sys/types.h>
 
-#include <libreidp/vector.h>
 #include "plugin-resolver.h"
+#include <libreidp/vector.h>
 
 typedef struct IdpPluginResolver {
     IdpVector* directories;
@@ -81,15 +81,14 @@ static char* path_concatenate(const char* first, const char* second) {
 }
 
 static char* get_plugin_path_for_name_in_dir(const char* directory_path,
-    const char* plugin_name)
-{
+                                             const char* plugin_name) {
     DIR* directory = opendir(directory_path);
 
     char error_message[80];
     if (NULL == directory) {
         strerror_r(errno, error_message, sizeof(error_message));
         fprintf(stderr, "Couldn't open plugin directory '%s': %s\n",
-            directory_path, plugin_name);
+                directory_path, plugin_name);
         return NULL;
     }
 
@@ -109,8 +108,7 @@ static char* get_plugin_path_for_name_in_dir(const char* directory_path,
     return result;
 }
 
-static void string_free(char** string)
-{ free(*string); }
+static void string_free(char** string) { free(*string); }
 
 ///////////////////////////////////////////////////////////////////////////////
 // Public API
@@ -124,8 +122,8 @@ IdpPluginResolver* idp_plugin_resolver_new() {
     }
 
     memset(resolver, 0, sizeof(*resolver));
-    resolver->directories = idp_vector_new(sizeof(char*),
-        (IdpVectorFreeFn*)string_free);
+    resolver->directories =
+        idp_vector_new(sizeof(char*), (IdpVectorFreeFn*)string_free);
     return resolver;
 }
 
@@ -135,21 +133,19 @@ void idp_plugin_resolver_free(IdpPluginResolver* resolver) {
 }
 
 void idp_plugin_resolver_add_directory(IdpPluginResolver* resolver,
-    char* load_directory)
-{
+                                       char* load_directory) {
     char** directory = idp_vector_reserve(resolver->directories);
     *directory = load_directory;
 }
 
 char* idp_plugin_resolver_get_plugin_path(IdpPluginResolver* resolver,
-    const char* plugin_name)
-{
+                                          const char* plugin_name) {
     IdpVectorIter iterator = {0};
     idp_vector_iter_init(&iterator, resolver->directories);
     char** directory = NULL;
     while (NULL != (directory = idp_vector_iter_next(&iterator))) {
-        char* plugin_path = get_plugin_path_for_name_in_dir(*directory,
-            plugin_name);
+        char* plugin_path =
+            get_plugin_path_for_name_in_dir(*directory, plugin_name);
         if (NULL != plugin_path) {
             return plugin_path;
         }

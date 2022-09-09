@@ -30,12 +30,12 @@
 // IN THE SOFTWARE.
 ////
 
+#include "plugin-loader.h"
 #include <dlfcn.h>
+#include <libreidp/libreidp.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <libreidp/libreidp.h>
-#include "plugin-loader.h"
 
 typedef struct IdpPlugin {
     IdpPluginDefinition* definition;
@@ -67,8 +67,8 @@ IdpPlugin* idp_plugin_load(char* filename) {
         return NULL;
     }
 
-    plugin->definition = dlsym(plugin->dl_handle,
-        PLUGIN_DEFINITION_SYMBOL_NAME);
+    plugin->definition =
+        dlsym(plugin->dl_handle, PLUGIN_DEFINITION_SYMBOL_NAME);
     if (NULL == plugin->definition) {
         perror(dlerror());
         dlclose(plugin->dl_handle);
@@ -85,8 +85,9 @@ void idp_plugin_remove(IdpPlugin* plugin) {
     free(plugin);
 }
 
-IdpPluginInterface idp_plugin_get_interface(const IdpPlugin* plugin)
-{ return plugin->definition->interface; }
+IdpPluginInterface idp_plugin_get_interface(const IdpPlugin* plugin) {
+    return plugin->definition->interface;
+}
 
 IdpHttpInterface* idp_plugin_get_http_interface(IdpPlugin* plugin) {
     if (IDP_PLUGIN_HTTP != plugin->definition->interface) {
