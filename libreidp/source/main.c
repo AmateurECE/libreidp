@@ -7,7 +7,7 @@
 //
 // CREATED:         08/16/2022
 //
-// LAST EDITED:     09/04/2022
+// LAST EDITED:     09/08/2022
 //
 // Copyright 2022, Ethan D. Twardy
 //
@@ -163,11 +163,13 @@ static void idp_initialize_http_interface(IdpCoresEnabled* cores_enabled,
     if (!cores_enabled->http.enabled) {
         fprintf(stderr, "Error: A plugin has requested a core that has not"
             " been enabled.\n");
+        return;
     }
 
     if (NULL == http) {
         fprintf(stderr, "Error: A plugin is erroneously reporting to support"
             " an interface that it does not.\n");
+        return;
     }
 
     http->register_endpoints(cores_enabled->http.core);

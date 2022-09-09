@@ -206,6 +206,8 @@ static int idp_http_core_on_message_complete(llhttp_t* parser) {
     if (response.ok && !response.empty) {
         uv_write(response_stream, (uv_stream_t*)&context->client,
             &response.buffer, 1, idp_http_core_connection_write);
+    } else {
+        free(response_stream);
     }
 
     return HPE_OK;
