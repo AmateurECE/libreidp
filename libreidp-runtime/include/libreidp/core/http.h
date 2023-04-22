@@ -8,7 +8,7 @@
 //
 // CREATED:         08/22/2022
 //
-// LAST EDITED:     09/04/2022
+// LAST EDITED:     09/09/2022
 //
 // Copyright 2022, Ethan D. Twardy
 //
@@ -45,6 +45,30 @@
 typedef struct IdpHttpCoreConfig {
     int default_port;
 } IdpHttpCoreConfig;
+
+///////////////////////////////////////////////////////////////////////////////
+// Query Parameters
+////
+
+// A single query parameter
+typedef struct IdpHttpParam {
+    const char* name;
+    size_t name_length;
+
+    const char* value;
+    size_t value_length;
+} IdpHttpParam;
+
+// Iterator over borrowed string
+typedef struct IdpHttpParamsIter {
+    const char* string;
+    const char* index;
+
+    IdpHttpParam param;
+} IdpHttpParamsIter;
+
+void idp_http_params_iter_init(IdpHttpParamsIter* iter, const char* string);
+IdpHttpParam* idp_http_params_iter_next(IdpHttpParamsIter* iter);
 
 ///////////////////////////////////////////////////////////////////////////////
 // Request

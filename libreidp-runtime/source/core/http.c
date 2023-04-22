@@ -7,7 +7,7 @@
 //
 // CREATED:         08/22/2022
 //
-// LAST EDITED:     09/05/2022
+// LAST EDITED:     09/09/2022
 //
 // Copyright 2022, Ethan D. Twardy
 //
@@ -33,6 +33,57 @@
 #include <libreidp/priv/core/http.h>
 #include <stdlib.h>
 #include <string.h>
+
+///////////////////////////////////////////////////////////////////////////////
+// Query Parameters
+////
+
+static bool idp_http_params_in_query_string(IdpHttpParamsIter* iter) {
+    return iter->index == iter->string || '?' == iter->string[0];
+}
+
+static IdpHttpParam* idp_http_params_find_param(IdpHttpParamsIter* iter,
+                                                char start_token,
+                                                char end_token) {
+    char* index = strchr(iter->index, start_token);
+    if (NULL == index) {
+        return NULL;
+    }
+
+    iter->index = ++index;
+    iter->param.name = iter->index;
+    index = strchr(iter->index, '=');
+    if (NULL == index) {
+        return NULL;
+    }
+
+    iter->param.name_length = index - iter->param.name;
+    iter->index = ++index;
+    iter->param.value = iter->index;
+    index = strchr(iter->index, end_token);
+    if (NULL == index) {
+        iter->param.value_length = strlen(iter->param.value);
+    } else {
+        iter->param.value_length = index - iter->param.value;
+    }
+    return &iter->param;
+}
+
+void idp_http_params_iter_init(IdpHttpParamsIter* iter, const char* string) {
+    iter->string = string;
+    iter->index = string;
+    iter->param = (IdpHttpParam){0};
+}
+
+IdpHttpParam* idp_http_params_iter_next(IdpHttpParamsIter* iter) {
+    if ('\0' == *iter->index) {
+        return NULL;
+    } else if (!idp_http_params_in_query_string(iter)) {
+        return idp_http_params_find_param(iter, '?', '&');
+    } else {
+        return idp_http_params_find_param(iter, '&', '&');
+    }
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 // Request
